@@ -24,7 +24,7 @@
 <br/>
 
 # Architecture
-View를 담당하는 Presenter 계층, Data를 담당하는 Data 계층, 비즈니스 로직을 담당하는 Domain 계층으로 구성됩니다.  
+View를 담당하는 **Presenter 계층**, Data를 담당하는 **Data 계층**, 비즈니스 로직을 담당하는 **Domain 계층**으로 구성됩니다.  
 구글의 [앱 아키텍처 가이드](https://developer.android.com/topic/architecture?hl=ko)을 따릅니다.  
 <br/>
 ![Clean Architecture-001](https://github.com/amicably-until-the-end/ShortTutoring/assets/63138511/1ed57f51-35b2-4a45-8516-1a754a2f0b1f)
