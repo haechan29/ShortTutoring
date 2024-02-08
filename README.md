@@ -1,6 +1,7 @@
 # 숏과외
 🙋 **질문**하고 싶은 학생과 **답변**할 수 있는 선생님을 위한 **온라인 과외 플랫폼** 👨‍🏫  
 <br/>
+<img src="https://github.com/haechan29/ShortTutoring/assets/63138511/a5eedf2d-7ada-4064-9dc3-703cb94f0c56" width=60%>
 
 # Key Function
 <img src="https://github.com/amicably-until-the-end/ShortTutoring/assets/63138511/bc650a6a-c9a4-424e-b000-82bdfd248340" width=30% height="500">
