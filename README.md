@@ -1,5 +1,5 @@
 # 숏과외
-<img src="https://github.com/haechan29/ShortTutoring/assets/63138511/627288ef-6347-4b76-8580-93065aa004a9" width=80%>
+<img src="https://github.com/haechan29/ShortTutoring/assets/63138511/627288ef-6347-4b76-8580-93065aa004a9">
 </br></br>
 
 # Tech Stack
