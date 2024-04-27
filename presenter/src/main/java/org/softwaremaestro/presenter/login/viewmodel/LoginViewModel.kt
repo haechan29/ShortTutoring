@@ -29,8 +29,8 @@ class LoginViewModel @Inject constructor(
 ) :
     ViewModel() {
 
-    private val _saveRole: MutableLiveData<UIState<String>> = MutableLiveData()
-    val saveRole: LiveData<UIState<String>> get() = _saveRole
+    private val _role: MutableLiveData<UIState<String>> = MutableLiveData()
+    val role: LiveData<UIState<String>> get() = _role
 
     private val _userRole: MutableLiveData<String> = MutableLiveData()
     val userRole: LiveData<String> get() = _userRole
@@ -92,19 +92,19 @@ class LoginViewModel @Inject constructor(
         }
     }
 
-    fun autoLogin() {
+    fun getRoleFromLocalDB() {
         viewModelScope.launch {
             autoLoginUseCase.execute()
                 .catch {
-                    _saveRole.postValue(UIState.Failure)
+                    _role.postValue(UIState.Failure)
                     logError(this@LoginViewModel::class.java, it.message.toString())
                 }
-                .onStart { _saveRole.postValue(UIState.Loading) }
+                .onStart { _role.postValue(UIState.Loading) }
                 .collect { result ->
                     when (result) {
-                        is BaseResult.Success -> _saveRole.postValue(UIState.Success(result.data))
+                        is BaseResult.Success -> _role.postValue(UIState.Success(result.data))
                         else -> {
-                            _saveRole.postValue(UIState.Failure)
+                            _role.postValue(UIState.Failure)
                             logError(this@LoginViewModel::class.java, result.toString())
                         }
                     }

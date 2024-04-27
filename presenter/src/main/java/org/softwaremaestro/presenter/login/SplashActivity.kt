@@ -23,11 +23,13 @@ class SplashActivity : AppCompatActivity() {
 
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
+
         binding = ActivitySplashBinding.inflate(layoutInflater)
         setContentView(binding.root)
+
         getPendingIntent()
-        observeAutoLoginResult()
-        loginViewModel.autoLogin()
+
+        autoLogin()
     }
 
     private fun getPendingIntent() {
@@ -42,52 +44,32 @@ class SplashActivity : AppCompatActivity() {
     }
 
 
-    private fun observeAutoLoginResult() {
-        loginViewModel.saveRole.observe(this) {
-            when (it) {
-                is UIState.Success -> {
-                    loginViewModel.registerFCMToken()
-                    if (it._data == "teacher") {
-                        goToTeacherHomeActivity()
-                    } else if (it._data == "student") {
-                        goToStudentHomeActivity()
-                    } else {
-                        // TODO : 선생님 , 학생 말고 다른 사용자 있을 경우. EX 관리자.
-                        goToLoginActivity()
-                    }
-                }
+    private fun autoLogin() {
+        loginViewModel.getRoleFromLocalDB()
 
-                is UIState.Failure -> {
-                    goToLoginActivity()
-                }
-
-                else -> {
-                }
+        loginViewModel.role.observe(this) {
+            if (it is UIState.Success) {
+                loginViewModel.registerFCMToken()
             }
+            startTargetActivity(it._data)
         }
     }
 
-    private fun goToTeacherHomeActivity() {
-        val intent = Intent(this, TeacherHomeActivity::class.java)
-        chatId?.let { intent.putExtra(APP_LINK_ARGS_CHAT_ID, it) }
-        startActivity(intent)
-    }
+    private fun startTargetActivity(role: String? = null) {
+        val targetActivityClass = when (role) {
+            "student" ->    StudentHomeActivity::class.java
+            "teacher" ->    TeacherHomeActivity::class.java
+            else ->         LoginActivity::class.java
+        }
 
-    private fun goToStudentHomeActivity() {
-        val intent = Intent(this, StudentHomeActivity::class.java)
-        chatId?.let { intent.putExtra(APP_LINK_ARGS_CHAT_ID, it) }
-        Log.d("deepLink@Splash", "startStudentHome: $chatId")
-        startActivity(intent)
-    }
-
-    private fun goToLoginActivity() {
-        val intent = Intent(this, LoginActivity::class.java)
+        val intent = Intent(this, targetActivityClass).apply {
+            chatId?.let { putExtra(APP_LINK_ARGS_CHAT_ID, it) }
+        }
         startActivity(intent)
     }
 
     companion object {
         const val APP_LINK_ARGS_CHAT_ID = "chattingId"
-        const val CHAT_INTENT_FLAG = 100
     }
 
 }
