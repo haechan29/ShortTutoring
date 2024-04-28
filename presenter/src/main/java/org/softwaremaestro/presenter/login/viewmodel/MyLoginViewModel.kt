@@ -14,8 +14,9 @@ import kotlinx.coroutines.flow.flow
 import kotlinx.coroutines.flow.flowOn
 import kotlinx.coroutines.flow.retryWhen
 import kotlinx.coroutines.launch
-import org.softwaremaestro.presenter.login.TokenException
+import org.softwaremaestro.domain.login.entity.TokenException
 import org.softwaremaestro.domain.login.entity.LoginToken
+import org.softwaremaestro.domain.login.entity.TokenNotFoundException
 import org.softwaremaestro.presenter.util.UIState
 import javax.inject.Inject
 
@@ -46,7 +47,7 @@ class MyLoginViewModelModel @Inject constructor(): ViewModel() {
                 cause is TokenException && attempt < 3
             }
             .catch { e ->
-                throw TokenException()
+                throw TokenNotFoundException
             }
             .first()
     }

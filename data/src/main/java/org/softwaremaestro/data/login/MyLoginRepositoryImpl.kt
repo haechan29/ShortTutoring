@@ -1,5 +1,6 @@
 package org.softwaremaestro.data.login
 
+import android.util.Log
 import com.google.firebase.messaging.FirebaseMessaging
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.coroutineScope
@@ -17,6 +18,7 @@ import org.softwaremaestro.domain.common.BaseResult
 import org.softwaremaestro.domain.login.LoginRepository
 import org.softwaremaestro.domain.login.MyLoginRepository
 import org.softwaremaestro.domain.login.entity.LoginToken
+import org.softwaremaestro.domain.login.entity.TokenNotFoundException
 import org.softwaremaestro.domain.login.entity.UserVO
 import javax.inject.Inject
 import kotlin.coroutines.resume
@@ -37,6 +39,7 @@ class MyLoginRepositoryImpl @Inject constructor(): MyLoginRepository {
         return withContext(Dispatchers.IO) {
             delay(1000)
             // TODO
+            if (savedToken == null) throw TokenNotFoundException
             savedToken!!
         }
     }
