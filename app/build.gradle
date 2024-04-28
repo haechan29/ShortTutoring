@@ -24,8 +24,6 @@ android {
         testInstrumentationRunner "androidx.test.runner.AndroidJUnitRunner"
         buildConfigField "String", "KAKAO_APP_KEY", "\"${KAKAO_APP_KEY}\""
         manifestPlaceholders = [KAKAO_APP_KEY: KAKAO_APP_KEY]
-
-
     }
 
     buildTypes {
