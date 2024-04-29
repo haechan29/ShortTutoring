@@ -9,21 +9,17 @@ import org.softwaremaestro.domain.login.entity.LoginToken
 import org.softwaremaestro.domain.login.entity.TokenNotFoundException
 import javax.inject.Inject
 
-object FakeMyLoginRepositoryImpl: MyLoginRepository {
+class FakeMyLoginRepositoryImpl(val tokenStorage: TokenStorage, val validator: TokenValidator): MyLoginRepository {
     override suspend fun save(token: LoginToken) {
-        if (!token.isValid()) {
-            throw InvalidTokenException
-        }
+        validator.validate(token)
 
-        FakeTokenStorage.save(token)
+        tokenStorage.save(token)
     }
 
     override suspend fun load(): LoginToken {
-        val token = FakeTokenStorage.load()
+        val token = tokenStorage.load()
 
-        if (!token.isValid()) {
-            throw InvalidTokenException
-        }
+        validator.validate(token)
 
         return token
     }
