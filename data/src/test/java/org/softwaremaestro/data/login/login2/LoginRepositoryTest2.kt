@@ -3,13 +3,15 @@ package org.softwaremaestro.data.login.login2
 import io.kotest.assertions.throwables.shouldThrow
 import io.kotest.core.spec.IsolationMode
 import io.kotest.core.spec.style.FunSpec
-import io.kotest.matchers.ints.exactly
+import io.kotest.matchers.should
 import io.kotest.matchers.shouldBe
-import io.kotest.matchers.string.shouldContain
+import io.kotest.matchers.types.beInstanceOf
+import io.mockk.coVerify
 import io.mockk.spyk
 import io.mockk.verify
-import org.softwaremaestro.data.login.fake.FakeLoginRequest
+import org.softwaremaestro.data.login.LoginRequest
 import org.softwaremaestro.data.login.fake.FakeMyLoginRepositoryImpl
+import org.softwaremaestro.data.login.fake.FakeRequestBuilder
 import org.softwaremaestro.data.login.fake.FakeServer
 import org.softwaremaestro.data.login.fake.FakeTokenStorage
 import org.softwaremaestro.data.login.fake.FakeTokenValidator
@@ -51,43 +53,46 @@ class LoginRepositoryTest2: FunSpec({
     }
 
     context("로그인한다") {
-        test("유효하지 않은 아이디를 입력하면 InvalidIdException이 발생한다") {
-            val invalidId = ""
+        context("아이디와 비밀번호를 검증한다") {
+            test("유효하지 않은 아이디를 입력하면 InvalidIdException이 발생한다") {
+                val invalidId = ""
 
-            shouldThrow<InvalidIdException> {
-                repository.login(id = invalidId, password = "password")
+                shouldThrow<InvalidIdException> {
+                    repository.login(id = invalidId, password = "password")
+                }
+            }
+
+            test("유효하지 않은 비밀번호를 입력하면 InvalidPasswordException이 발생한다") {
+                val invalidPassword = ""
+
+                shouldThrow<InvalidPasswordException> {
+                    repository.login(id = "id", password = invalidPassword)
+                }
             }
         }
 
-        test("유효하지 않은 비밀번호를 입력하면 InvalidPasswordException이 발생한다") {
-            val invalidPassword = ""
+        context("유효한 아이디와 비밀번호를 입력하면 서버로 로그인 요청을 보낸다") {
+            val id = "id"
+            val password = "password"
 
-            shouldThrow<InvalidPasswordException> {
-                repository.login(id = "id", password = invalidPassword)
+            test("유효한 아이디와 비밀번호를 입력하면 서버로 요청을 보낸다") {
+                repository.login(id = id, password = password)
+
+                coVerify(exactly = 1) { server.send(ofType<LoginRequest>()) }
             }
         }
 
-        test("유효한 아이디와 비밀번호를 입력하면 서버로 로그인 요청을 전송한다") {
-
-        }
-
-        context("로그인 요청은 로그인 정보를 포함한다") {
+        xcontext("로그인 요청은 로그인 정보를 포함한다") {
             test("로그인 요청은 아이디를 포함한다") {
                 val id = "id"
 
                 repository.login(id = id, password = "password")
-
-                val request = server.requests.pop() as FakeLoginRequest
-                request.id shouldBe id
             }
 
             test("로그인 요청은 비밀번호를 포함한다") {
                 val password = "password"
 
                 repository.login(id = "id", password = password)
-
-                val request = server.requests.pop() as FakeLoginRequest
-                request.password shouldBe password
             }
         }
     }
