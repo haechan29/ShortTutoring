@@ -1,19 +1,14 @@
-package org.softwaremaestro.data.login
+package org.softwaremaestro.data.login.test
 
-import io.kotest.assertions.throwables.shouldThrow
 import io.kotest.core.spec.IsolationMode
 import io.kotest.core.spec.style.FunSpec
-import io.kotest.matchers.shouldBe
-import io.mockk.every
-import io.mockk.mockk
 import io.mockk.spyk
 import io.mockk.verify
 import io.mockk.verifyOrder
-import kotlinx.coroutines.coroutineScope
-import org.softwaremaestro.domain.login.MyLoginRepository
-import org.softwaremaestro.domain.login.entity.InvalidTokenException
+import org.softwaremaestro.data.login.fake.FakeMyLoginRepositoryImpl
+import org.softwaremaestro.data.login.fake.FakeTokenStorage
+import org.softwaremaestro.data.login.fake.FakeTokenValidator
 import org.softwaremaestro.domain.login.entity.LoginToken
-import org.softwaremaestro.domain.login.entity.TokenNotFoundException
 
 class LoginRepositoryTest: FunSpec({
     isolationMode = IsolationMode.InstancePerLeaf
@@ -47,7 +42,7 @@ class LoginRepositoryTest: FunSpec({
 
     context("토큰을 로드한다") {
         beforeEach {
-            storage.save(token)
+            FakeTokenStorage.save(token)
             repository.load()
         }
 

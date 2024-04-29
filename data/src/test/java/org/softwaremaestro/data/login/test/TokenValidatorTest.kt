@@ -1,15 +1,11 @@
-package org.softwaremaestro.data.login
+package org.softwaremaestro.data.login.test
 
 import io.kotest.assertions.throwables.shouldNotThrow
 import io.kotest.assertions.throwables.shouldThrow
 import io.kotest.core.spec.style.FunSpec
-import io.kotest.matchers.shouldBe
-import io.mockk.every
-import io.mockk.mockk
-import org.softwaremaestro.domain.login.MyLoginRepository
+import org.softwaremaestro.data.login.fake.FakeTokenValidator
 import org.softwaremaestro.domain.login.entity.InvalidTokenException
 import org.softwaremaestro.domain.login.entity.LoginToken
-import org.softwaremaestro.domain.login.entity.TokenNotFoundException
 
 class TokenValidatorTest: FunSpec({
     val validator = FakeTokenValidator
@@ -19,7 +15,7 @@ class TokenValidatorTest: FunSpec({
             val validToken = LoginToken("") { true }
 
             shouldNotThrow<InvalidTokenException> {
-                validator.validate(validToken)
+                FakeTokenValidator.validate(validToken)
             }
         }
 
@@ -27,7 +23,7 @@ class TokenValidatorTest: FunSpec({
             val invalidToken = LoginToken("") { false }
 
             shouldThrow<InvalidTokenException> {
-                validator.validate(invalidToken)
+                FakeTokenValidator.validate(invalidToken)
             }
         }
     }

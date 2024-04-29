@@ -1,13 +1,9 @@
-package org.softwaremaestro.data.login
+package org.softwaremaestro.data.login.fake
 
-import kotlinx.coroutines.Dispatchers
-import kotlinx.coroutines.delay
-import kotlinx.coroutines.withContext
+import org.softwaremaestro.data.login.TokenStorage
+import org.softwaremaestro.data.login.TokenValidator
 import org.softwaremaestro.domain.login.MyLoginRepository
-import org.softwaremaestro.domain.login.entity.InvalidTokenException
 import org.softwaremaestro.domain.login.entity.LoginToken
-import org.softwaremaestro.domain.login.entity.TokenNotFoundException
-import javax.inject.Inject
 
 class FakeMyLoginRepositoryImpl(val tokenStorage: TokenStorage, val validator: TokenValidator): MyLoginRepository {
     override suspend fun save(token: LoginToken) {
