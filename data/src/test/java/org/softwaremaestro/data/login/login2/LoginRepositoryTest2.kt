@@ -3,14 +3,16 @@ package org.softwaremaestro.data.login.login2
 import io.kotest.assertions.throwables.shouldThrow
 import io.kotest.core.spec.IsolationMode
 import io.kotest.core.spec.style.FunSpec
-import io.kotest.matchers.should
+import io.kotest.matchers.ints.exactly
 import io.kotest.matchers.shouldBe
+import io.kotest.matchers.string.shouldContain
 import io.mockk.spyk
+import io.mockk.verify
+import org.softwaremaestro.data.login.fake.FakeLoginRequest
 import org.softwaremaestro.data.login.fake.FakeMyLoginRepositoryImpl
 import org.softwaremaestro.data.login.fake.FakeServer
 import org.softwaremaestro.data.login.fake.FakeTokenStorage
 import org.softwaremaestro.data.login.fake.FakeTokenValidator
-import org.softwaremaestro.domain.login.entity.LoginToken
 import org.softwaremaestro.domain.login.entity.exception.InvalidIdException
 import org.softwaremaestro.domain.login.entity.exception.InvalidPasswordException
 
@@ -62,6 +64,30 @@ class LoginRepositoryTest2: FunSpec({
 
             shouldThrow<InvalidPasswordException> {
                 repository.login(id = "id", password = invalidPassword)
+            }
+        }
+
+        test("유효한 아이디와 비밀번호를 입력하면 서버로 로그인 요청을 전송한다") {
+
+        }
+
+        context("로그인 요청은 로그인 정보를 포함한다") {
+            test("로그인 요청은 아이디를 포함한다") {
+                val id = "id"
+
+                repository.login(id = id, password = "password")
+
+                val request = server.requests.pop() as FakeLoginRequest
+                request.id shouldBe id
+            }
+
+            test("로그인 요청은 비밀번호를 포함한다") {
+                val password = "password"
+
+                repository.login(id = "id", password = password)
+
+                val request = server.requests.pop() as FakeLoginRequest
+                request.password shouldBe password
             }
         }
     }

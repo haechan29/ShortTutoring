@@ -35,5 +35,8 @@ class FakeMyLoginRepositoryImpl(
         if (password.isEmpty()) {
             throw InvalidPasswordException
         }
+
+        val request = FakeLoginRequest(id, password)
+        server.send(request)
     }
 }

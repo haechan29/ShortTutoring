@@ -1,12 +1,16 @@
 package org.softwaremaestro.data.login.fake
 
+import org.softwaremaestro.data.login.Request
 import org.softwaremaestro.data.login.Server
+import java.util.Stack
 
 object FakeServer: Server {
-    override suspend fun sendRequest() {
+    val requests = Stack<Request>()
+
+    override suspend fun send(request: Request) {
+        requests.push(request)
     }
 
-    override suspend fun receiveResponse() {
-        TODO("Not yet implemented")
+    override suspend fun receive() {
     }
 }
