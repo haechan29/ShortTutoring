@@ -1,3 +1,6 @@
 package org.softwaremaestro.domain.mylogin.entity
 
-data class LoginToken(val content: String, var isValid: () -> Boolean)
+
+abstract class LoginToken(val content: String, var isValid: () -> Boolean)
+
+class FakeLoginToken(content: String, isValid: () -> Boolean): LoginToken(content, isValid)

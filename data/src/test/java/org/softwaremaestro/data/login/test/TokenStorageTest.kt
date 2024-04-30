@@ -4,6 +4,7 @@ import io.kotest.assertions.throwables.shouldThrow
 import io.kotest.core.spec.style.FunSpec
 import io.kotest.matchers.shouldBe
 import org.softwaremaestro.data.login.fake.FakeTokenStorage
+import org.softwaremaestro.domain.mylogin.entity.FakeLoginToken
 import org.softwaremaestro.domain.mylogin.entity.LoginToken
 import org.softwaremaestro.domain.mylogin.exception.TokenNotFoundException
 
@@ -22,7 +23,7 @@ class TokenStorageTest: FunSpec({
         }
 
         test("저장된 토큰을 로드하면 컨텐츠가 유지된다") {
-            val token = LoginToken("content") { true }
+            val token = FakeLoginToken("content") { true }
             FakeTokenStorage.save(token)
             FakeTokenStorage.load().content shouldBe "content"
         }

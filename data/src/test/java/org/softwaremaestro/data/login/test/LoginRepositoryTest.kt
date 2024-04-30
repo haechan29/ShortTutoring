@@ -11,7 +11,7 @@ import org.softwaremaestro.data.login.fake.FakeMyLoginRepositoryImpl
 import org.softwaremaestro.data.login.fake.FakeTokenManager
 import org.softwaremaestro.data.login.fake.FakeTokenStorage
 import org.softwaremaestro.data.login.fake.FakeTokenValidator
-import org.softwaremaestro.domain.mylogin.entity.LoginToken
+import org.softwaremaestro.domain.mylogin.entity.FakeLoginToken
 
 class LoginRepositoryTest: FunSpec({
     isolationMode = IsolationMode.InstancePerLeaf
@@ -23,7 +23,7 @@ class LoginRepositoryTest: FunSpec({
     val tokenManager = spyk(FakeTokenManager(localDB))
     val repository = FakeMyLoginRepositoryImpl(storage, validator, server, tokenManager)
 
-    val token = LoginToken("") { true }
+    val token = FakeLoginToken("") { true }
 
     context("토큰을 저장한다") {
         beforeEach {

@@ -3,8 +3,11 @@ package org.softwaremaestro.data.login.login2
 import io.kotest.assertions.throwables.shouldThrow
 import io.kotest.core.spec.IsolationMode
 import io.kotest.core.spec.style.FunSpec
+import io.mockk.coEvery
 import io.mockk.coVerify
+import io.mockk.every
 import io.mockk.spyk
+import io.mockk.verify
 import org.softwaremaestro.data.login.fake.FakeLocalDB
 import org.softwaremaestro.data.mylogin.LoginRequest
 import org.softwaremaestro.data.login.fake.FakeMyLoginRepositoryImpl
@@ -12,6 +15,7 @@ import org.softwaremaestro.data.login.fake.FakeServer
 import org.softwaremaestro.data.login.fake.FakeTokenManager
 import org.softwaremaestro.data.login.fake.FakeTokenStorage
 import org.softwaremaestro.data.login.fake.FakeTokenValidator
+import org.softwaremaestro.data.mylogin.AccessToken
 import org.softwaremaestro.domain.mylogin.entity.exception.AccessTokenNotFoundException
 import org.softwaremaestro.domain.mylogin.entity.exception.InvalidIdException
 import org.softwaremaestro.domain.mylogin.entity.exception.InvalidPasswordException
@@ -27,31 +31,37 @@ class LoginRepositoryTest2: FunSpec({
     val repository = FakeMyLoginRepositoryImpl(storage, validator, server, tokenManager)
 
     context("자동 로그인한다") {
-        xcontext("실행하지 않을 테스트") {
-            test("Splash Activity에 진입하면 자동 로그인을 시작한다")
+        test("Splash Activity에 진입하면 자동 로그인을 시작한다") {
+            // TODO()
         }
 
-        test("자동 로그인이 시작되면 액세스 토큰 인증을 시작한다") {
+        context("자동 로그인한다") {
             repository.autologin()
 
-            coVerify { tokenManager.authAccessToken() }
+            test("자동 로그인이 시작되면 액세스 토큰 인증을 시작한다") {
+                coVerify { tokenManager.authAccessToken() }
+            }
         }
 
-        test("액세스 토큰 인증을 시작하면 액세스 토큰을 가지고 있는지 확인한다") {
-            tokenManager.authAccessToken()
+        context("액세스 토큰 인증을 진행한다") {
+            beforeEach { tokenManager.authAccessToken() }
 
-            coVerify { localDB.readAccessToken() }
-        }
+            test("액세스 토큰 인증을 시작하면 액세스 토큰을 가지고 있는지 확인한다") {
+                coVerify { localDB.readAccessToken() }
+            }
 
-        test("액세스 토큰을 가지고 있지 않다면 리프레시 토큰 인증을 시작한다") {
-            tokenManager.authAccessToken()
+            test("액세스 토큰을 가지고 있지 않다면 리프레시 토큰 인증을 시작한다") {
+                coVerify { tokenManager.authRefreshToken() }
+            }
 
-            coVerify { tokenManager.authRefreshToken() }
+            test("액세스 토큰을 가지고 있다면 유효성을 확인한다") {
+                coEvery { tokenManager.hasAccessToken() } returns true
+
+//                verify { validator.validate(ofType<AccessToken>()) }
+            }
         }
 
         xcontext("실행하지 않을 테스트") {
-
-            test("액세스 토큰을 가지고 있다면 유효성을 확인한다")
 
             test("유효한 액세스 토큰을 가지고 있다면 서버에 전송한다")
 
