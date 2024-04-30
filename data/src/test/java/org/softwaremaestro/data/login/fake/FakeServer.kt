@@ -1,7 +1,7 @@
 package org.softwaremaestro.data.login.fake
 
-import org.softwaremaestro.data.login.Request
-import org.softwaremaestro.data.login.Server
+import org.softwaremaestro.data.mylogin.Request
+import org.softwaremaestro.data.mylogin.Server
 import java.util.Stack
 
 object FakeServer: Server {

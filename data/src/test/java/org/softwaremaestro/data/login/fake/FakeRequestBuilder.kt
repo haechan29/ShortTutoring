@@ -1,10 +1,10 @@
 package org.softwaremaestro.data.login.fake
 
-import org.softwaremaestro.data.login.LoginRequest
-import org.softwaremaestro.data.login.LoginRequestBuilder
-import org.softwaremaestro.data.login.LoginValidator
-import org.softwaremaestro.domain.login.entity.exception.InvalidIdException
-import org.softwaremaestro.domain.login.entity.exception.InvalidPasswordException
+import org.softwaremaestro.data.mylogin.LoginRequest
+import org.softwaremaestro.data.mylogin.LoginRequestBuilder
+import org.softwaremaestro.data.mylogin.LoginValidator
+import org.softwaremaestro.domain.mylogin.entity.exception.InvalidIdException
+import org.softwaremaestro.domain.mylogin.entity.exception.InvalidPasswordException
 
 object FakeRequestBuilder: LoginRequestBuilder {
     override fun build(id: String, password: String): LoginRequest {

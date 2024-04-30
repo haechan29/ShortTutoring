@@ -4,8 +4,8 @@ import io.kotest.assertions.throwables.shouldThrow
 import io.kotest.core.spec.style.FunSpec
 import io.kotest.matchers.shouldBe
 import org.softwaremaestro.data.login.fake.FakeTokenStorage
-import org.softwaremaestro.domain.login.entity.LoginToken
-import org.softwaremaestro.domain.login.entity.TokenNotFoundException
+import org.softwaremaestro.domain.mylogin.entity.LoginToken
+import org.softwaremaestro.domain.mylogin.exception.TokenNotFoundException
 
 class TokenStorageTest: FunSpec({
     val tokenStorage = FakeTokenStorage

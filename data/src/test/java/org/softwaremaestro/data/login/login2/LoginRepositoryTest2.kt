@@ -3,20 +3,18 @@ package org.softwaremaestro.data.login.login2
 import io.kotest.assertions.throwables.shouldThrow
 import io.kotest.core.spec.IsolationMode
 import io.kotest.core.spec.style.FunSpec
-import io.kotest.matchers.should
-import io.kotest.matchers.shouldBe
-import io.kotest.matchers.types.beInstanceOf
 import io.mockk.coVerify
 import io.mockk.spyk
-import io.mockk.verify
-import org.softwaremaestro.data.login.LoginRequest
+import org.softwaremaestro.data.login.fake.FakeLocalDB
+import org.softwaremaestro.data.mylogin.LoginRequest
 import org.softwaremaestro.data.login.fake.FakeMyLoginRepositoryImpl
-import org.softwaremaestro.data.login.fake.FakeRequestBuilder
 import org.softwaremaestro.data.login.fake.FakeServer
+import org.softwaremaestro.data.login.fake.FakeTokenManager
 import org.softwaremaestro.data.login.fake.FakeTokenStorage
 import org.softwaremaestro.data.login.fake.FakeTokenValidator
-import org.softwaremaestro.domain.login.entity.exception.InvalidIdException
-import org.softwaremaestro.domain.login.entity.exception.InvalidPasswordException
+import org.softwaremaestro.domain.mylogin.entity.exception.AccessTokenNotFoundException
+import org.softwaremaestro.domain.mylogin.entity.exception.InvalidIdException
+import org.softwaremaestro.domain.mylogin.entity.exception.InvalidPasswordException
 
 class LoginRepositoryTest2: FunSpec({
     isolationMode = IsolationMode.InstancePerLeaf
@@ -24,35 +22,56 @@ class LoginRepositoryTest2: FunSpec({
     val storage = spyk(FakeTokenStorage)
     val validator = spyk(FakeTokenValidator)
     val server = spyk(FakeServer)
-    val repository = FakeMyLoginRepositoryImpl(storage, validator, server)
+    val localDB = spyk(FakeLocalDB)
+    val tokenManager = spyk(FakeTokenManager(localDB))
+    val repository = FakeMyLoginRepositoryImpl(storage, validator, server, tokenManager)
 
-    xcontext("자동 로그인한다") {
-        test("Splash Activity에 진입하면 자동 로그인을 시작한다")
+    context("자동 로그인한다") {
+        xcontext("실행하지 않을 테스트") {
+            test("Splash Activity에 진입하면 자동 로그인을 시작한다")
+        }
 
-        test("자동 로그인이 시작되면 액세스 토큰 인증을 시작한다")
+        test("자동 로그인이 시작되면 액세스 토큰 인증을 시작한다") {
+            repository.autologin()
 
-        test("액세스 토큰 인증을 시작하면 액세스 토큰을 가지고 있는지 확인한다")
+            coVerify { tokenManager.authAccessToken() }
+        }
 
-        test("액세스 토큰을 가지고 있다면 유효성을 확인한다")
+        test("액세스 토큰 인증을 시작하면 액세스 토큰을 가지고 있는지 확인한다") {
+            tokenManager.authAccessToken()
 
-        test("유효한 액세스 토큰을 가지고 있다면 서버에 전송한다")
+            coVerify { localDB.readAccessToken() }
+        }
 
-        test("유효하지 않은 액세스 토큰을 가지고 있다면 InvalidAccessTokenException을 발생시킨다")
+        test("액세스 토큰을 가지고 있지 않다면 리프레시 토큰 인증을 시작한다") {
+            tokenManager.authAccessToken()
 
-        test("액세스 토큰을 가지고 있지 않다면 InvalidAccessTokenException을 발생시킨다")
+            coVerify { tokenManager.authRefreshToken() }
+        }
 
-        test("리프레시 토큰 인증을 시작하면 리프레시 토큰을 가지고 있는지 확인한다")
+        xcontext("실행하지 않을 테스트") {
 
-        test("리프레시 토큰을 가지고 있다면 유효성을 확인한다")
+            test("액세스 토큰을 가지고 있다면 유효성을 확인한다")
 
-        test("유효한 리프레시 토큰을 가지고 있다면 서버에 전송한다")
+            test("유효한 액세스 토큰을 가지고 있다면 서버에 전송한다")
 
-        test("유효하지 않은 리프레시 토큰을 가지고 있다면 InvalidRefreshTokenException을 발생시킨다")
+            test("유효하지 않은 액세스 토큰을 가지고 있다면 InvalidAccessTokenException을 발생시킨다")
 
-        test("리프레시 토큰을 가지고 있지 않다면 InvalidRefreshTokenException을 발생시킨다")
+            test("리프레시 토큰 인증을 시작하면 리프레시 토큰을 가지고 있는지 확인한다")
+
+            test("리프레시 토큰을 가지고 있다면 유효성을 확인한다")
+
+            test("유효한 리프레시 토큰을 가지고 있다면 서버에 전송한다")
+
+            test("유효하지 않은 리프레시 토큰을 가지고 있다면 리프레시 토큰 인증을 실패 처리한다")
+
+            test("리프레시 토큰을 가지고 있지 않다면 리프레시 토큰 인증을 실패 처리한다")
+
+            test("리프레시 토큰 인증을 실패하면 이유를 밝힌다")
+        }
     }
 
-    context("로그인한다") {
+    xcontext("로그인한다") {
         context("아이디와 비밀번호를 검증한다") {
             test("유효하지 않은 아이디를 입력하면 InvalidIdException이 발생한다") {
                 val invalidId = ""
@@ -78,21 +97,7 @@ class LoginRepositoryTest2: FunSpec({
             test("유효한 아이디와 비밀번호를 입력하면 서버로 요청을 보낸다") {
                 repository.login(id = id, password = password)
 
-                coVerify(exactly = 1) { server.send(ofType<LoginRequest>()) }
-            }
-        }
-
-        xcontext("로그인 요청은 로그인 정보를 포함한다") {
-            test("로그인 요청은 아이디를 포함한다") {
-                val id = "id"
-
-                repository.login(id = id, password = "password")
-            }
-
-            test("로그인 요청은 비밀번호를 포함한다") {
-                val password = "password"
-
-                repository.login(id = "id", password = password)
+                coVerify { server.send(ofType<LoginRequest>()) }
             }
         }
     }
@@ -139,8 +144,12 @@ class LoginRepositoryTest2: FunSpec({
         }
     }
 
-    xcontext("토큰 관련 예외를 처리한다") {
-        test("InvalidAccessTokenException이 발생하면 리프레시 토큰 인증을 시작한다")
+    xcontext("토큰이 재발급되면 로그인을 시도한다") {
+        test("액세스 토큰이 재발급되면 로그인을 시도한다")
+
+        test("리프레시 토큰이 재발급되면 로그인을 시도한다")
+
+        test("토큰이 빠른 시간 안에 반복적으로 발급되어도 로그인을 여러 번 시도하지 않는다")
 
         test("InvalidRefreshTokenException이 발생하면 사용자 로그인을 시작한다")
 

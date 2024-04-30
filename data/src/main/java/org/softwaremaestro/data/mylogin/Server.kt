@@ -1,4 +1,4 @@
-package org.softwaremaestro.data.login
+package org.softwaremaestro.data.mylogin
 
 interface Server {
     suspend fun send(request: Request)

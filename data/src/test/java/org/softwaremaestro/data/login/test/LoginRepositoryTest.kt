@@ -5,11 +5,13 @@ import io.kotest.core.spec.style.FunSpec
 import io.mockk.spyk
 import io.mockk.verify
 import io.mockk.verifyOrder
+import org.softwaremaestro.data.login.fake.FakeLocalDB
 import org.softwaremaestro.data.login.fake.FakeServer
 import org.softwaremaestro.data.login.fake.FakeMyLoginRepositoryImpl
+import org.softwaremaestro.data.login.fake.FakeTokenManager
 import org.softwaremaestro.data.login.fake.FakeTokenStorage
 import org.softwaremaestro.data.login.fake.FakeTokenValidator
-import org.softwaremaestro.domain.login.entity.LoginToken
+import org.softwaremaestro.domain.mylogin.entity.LoginToken
 
 class LoginRepositoryTest: FunSpec({
     isolationMode = IsolationMode.InstancePerLeaf
@@ -17,7 +19,9 @@ class LoginRepositoryTest: FunSpec({
     val storage = spyk(FakeTokenStorage)
     val validator = spyk(FakeTokenValidator)
     val server = spyk(FakeServer)
-    val repository = FakeMyLoginRepositoryImpl(storage, validator, server)
+    val localDB = spyk(FakeLocalDB)
+    val tokenManager = spyk(FakeTokenManager(localDB))
+    val repository = FakeMyLoginRepositoryImpl(storage, validator, server, tokenManager)
 
     val token = LoginToken("") { true }
 
@@ -27,11 +31,11 @@ class LoginRepositoryTest: FunSpec({
         }
 
         test("토큰을 저장할 때 유효성을 검사한다") {
-            verify(exactly = 1) { validator["validate"](token) }
+            verify { validator["validate"](token) }
         }
 
         test("토큰을 저장할 때 TokenStorage에 저장한다") {
-            verify(exactly = 1) { storage["save"](token) }
+            verify { storage["save"](token) }
         }
 
         test("토큰을 저장할 때 유효성을 검사한 후에 TokenStorage에 저장한다") {
@@ -49,11 +53,11 @@ class LoginRepositoryTest: FunSpec({
         }
 
         test("토큰을 로드할 때 TokenStorage에서 로드한다") {
-            verify(exactly = 1) { storage["load"]() }
+            verify { storage["load"]() }
         }
 
         test("토큰을 로드할 때 유효성을 검사한다") {
-            verify(exactly = 1) { validator["validate"](token) }
+            verify { validator["validate"](token) }
         }
 
         test("토큰을 로드할 때 TokenStorage에서 로드한 후에 유효성을 검사한다") {

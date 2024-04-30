@@ -4,8 +4,8 @@ import io.kotest.assertions.throwables.shouldNotThrow
 import io.kotest.assertions.throwables.shouldThrow
 import io.kotest.core.spec.style.FunSpec
 import org.softwaremaestro.data.login.fake.FakeTokenValidator
-import org.softwaremaestro.domain.login.entity.InvalidTokenException
-import org.softwaremaestro.domain.login.entity.LoginToken
+import org.softwaremaestro.domain.mylogin.exception.InvalidTokenException
+import org.softwaremaestro.domain.mylogin.entity.LoginToken
 
 class TokenValidatorTest: FunSpec({
     val validator = FakeTokenValidator
