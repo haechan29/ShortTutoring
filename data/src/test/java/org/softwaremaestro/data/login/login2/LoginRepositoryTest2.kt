@@ -5,18 +5,14 @@ import io.kotest.core.spec.IsolationMode
 import io.kotest.core.spec.style.FunSpec
 import io.mockk.coEvery
 import io.mockk.coVerify
-import io.mockk.every
 import io.mockk.spyk
-import io.mockk.verify
 import org.softwaremaestro.data.login.fake.FakeLocalDB
-import org.softwaremaestro.data.mylogin.LoginRequest
+import org.softwaremaestro.domain.mylogin.entity.LoginRequest
 import org.softwaremaestro.data.login.fake.FakeMyLoginRepositoryImpl
 import org.softwaremaestro.data.login.fake.FakeServer
 import org.softwaremaestro.data.login.fake.FakeTokenManager
 import org.softwaremaestro.data.login.fake.FakeTokenStorage
 import org.softwaremaestro.data.login.fake.FakeTokenValidator
-import org.softwaremaestro.data.mylogin.AccessToken
-import org.softwaremaestro.domain.mylogin.entity.exception.AccessTokenNotFoundException
 import org.softwaremaestro.domain.mylogin.entity.exception.InvalidIdException
 import org.softwaremaestro.domain.mylogin.entity.exception.InvalidPasswordException
 

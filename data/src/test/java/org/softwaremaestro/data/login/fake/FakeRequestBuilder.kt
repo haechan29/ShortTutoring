@@ -1,6 +1,6 @@
 package org.softwaremaestro.data.login.fake
 
-import org.softwaremaestro.data.mylogin.LoginRequest
+import org.softwaremaestro.domain.mylogin.entity.LoginRequest
 import org.softwaremaestro.data.mylogin.LoginRequestBuilder
 import org.softwaremaestro.data.mylogin.LoginValidator
 import org.softwaremaestro.domain.mylogin.entity.exception.InvalidIdException
