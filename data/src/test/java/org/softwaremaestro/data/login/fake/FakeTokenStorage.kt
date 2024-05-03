@@ -3,7 +3,7 @@ package org.softwaremaestro.data.login.fake
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.delay
 import kotlinx.coroutines.withContext
-import org.softwaremaestro.data.mylogin.TokenStorage
+import org.softwaremaestro.domain.mylogin.entity.TokenStorage
 import org.softwaremaestro.domain.mylogin.entity.LoginToken
 
 object FakeTokenStorage: TokenStorage {

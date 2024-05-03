@@ -14,7 +14,7 @@ import kotlinx.coroutines.flow.flow
 import kotlinx.coroutines.flow.flowOn
 import kotlinx.coroutines.flow.retryWhen
 import kotlinx.coroutines.launch
-import org.softwaremaestro.domain.mylogin.entity.AccessLoginToken
+import org.softwaremaestro.domain.mylogin.entity.LoginAccessToken
 import org.softwaremaestro.domain.mylogin.entity.LoginToken
 import org.softwaremaestro.domain.mylogin.entity.exception.TokenException
 import org.softwaremaestro.domain.mylogin.entity.exception.TokenNotFoundException
@@ -87,7 +87,7 @@ class MyLoginViewModelModel @Inject constructor(): ViewModel() {
     }
 
     companion object {
-        val TOKEN_FROM_LOCAL_DB  = AccessLoginToken("token from local db") { true }
-        val TOKEN_FROM_SERVER    = AccessLoginToken("token from server"  ) { true }
+        val TOKEN_FROM_LOCAL_DB  = LoginAccessToken("token from local db") { true }
+        val TOKEN_FROM_SERVER    = LoginAccessToken("token from server"  ) { true }
     }
 }

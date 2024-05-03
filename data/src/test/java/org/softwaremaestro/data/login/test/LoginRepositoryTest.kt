@@ -2,10 +2,8 @@ package org.softwaremaestro.data.login.test
 
 import io.kotest.core.spec.IsolationMode
 import io.kotest.core.spec.style.FunSpec
-import io.kotest.matchers.should
 import io.kotest.matchers.shouldBe
 import io.kotest.matchers.shouldNotBe
-import io.kotest.matchers.types.beInstanceOf
 import io.mockk.coEvery
 import io.mockk.coVerify
 import io.mockk.coVerifyOrder
@@ -13,33 +11,26 @@ import io.mockk.every
 import io.mockk.mockk
 import io.mockk.spyk
 import io.mockk.verify
-import io.mockk.verifyOrder
-import kotlinx.serialization.descriptors.StructureKind
-import net.bytebuddy.matcher.ElementMatchers.any
-import org.softwaremaestro.data.login.fake.FakeLocalDB
-import org.softwaremaestro.data.login.fake.FakeServer
 import org.softwaremaestro.data.login.fake.FakeMyLoginRepositoryImpl
-import org.softwaremaestro.data.login.fake.FakeTokenManager
-import org.softwaremaestro.data.login.fake.FakeTokenStorage
-import org.softwaremaestro.data.login.fake.FakeTokenValidator
-import org.softwaremaestro.data.mylogin.TokenManager
-import org.softwaremaestro.data.mylogin.TokenStorage
-import org.softwaremaestro.data.mylogin.TokenValidator
+import org.softwaremaestro.domain.mylogin.entity.TokenManager
+import org.softwaremaestro.domain.mylogin.entity.TokenStorage
+import org.softwaremaestro.domain.mylogin.entity.TokenValidator
+import org.softwaremaestro.domain.mylogin.entity.LoginResult
 import org.softwaremaestro.domain.mylogin.entity.LoginToken
-import org.softwaremaestro.domain.mylogin.entity.Server
+import org.softwaremaestro.domain.mylogin.entity.Api
 
 class LoginRepositoryTest: FunSpec({
     isolationMode = IsolationMode.InstancePerLeaf
 
-    val storage = mockk<TokenStorage>(relaxed = true)
-    val validator = mockk<TokenValidator>(relaxed = true)
-    val server = mockk<Server>(relaxed = true)
-    val tokenManager = mockk<TokenManager>(relaxed = true)
-    val repository = FakeMyLoginRepositoryImpl(storage, validator, server, tokenManager)
-
-    val token = mockk<LoginToken>()
-
     context("토큰을 저장한다") {
+        val storage = mockk<TokenStorage>(relaxed = true)
+        val validator = mockk<TokenValidator>(relaxed = true)
+        val api = mockk<Api>(relaxed = true)
+        val tokenManager = mockk<TokenManager>(relaxed = true)
+        val repository = FakeMyLoginRepositoryImpl(storage, validator, api, tokenManager)
+
+        val token = mockk<LoginToken>()
+
         test("토큰을 저장할 때 유효성을 검사한다") {
             repository.save(token)
 
@@ -75,6 +66,12 @@ class LoginRepositoryTest: FunSpec({
     }
 
     context("토큰을 로드한다") {
+        val storage = mockk<TokenStorage>(relaxed = true)
+        val validator = mockk<TokenValidator>(relaxed = true)
+        val api = mockk<Api>(relaxed = true)
+        val tokenManager = mockk<TokenManager>(relaxed = true)
+        val repository = FakeMyLoginRepositoryImpl(storage, validator, api, tokenManager)
+
         test("로드할 토큰이 존재하지 않으면 null을 반환한다") {
             coEvery { storage.load() } returns null
 
@@ -112,6 +109,48 @@ class LoginRepositoryTest: FunSpec({
             every { validator.isValid(any()) } returns true
 
             repository.load() shouldNotBe null
+        }
+    }
+
+    context("로그인한다") {
+        val storage = mockk<TokenStorage>(relaxed = true)
+        val tokenValidator = mockk<TokenValidator>(relaxed = true)
+        val tokenManager = mockk<TokenManager>(relaxed = true)
+
+        val validId = "id"
+        val validPassword = "password"
+        val invalidId = ""
+        val invalidPassword = ""
+
+        context("아이디와 비밀번호를 검증한다") {
+            val api = mockk<Api>(relaxed = true)
+            val repository = FakeMyLoginRepositoryImpl(storage, tokenValidator, api, tokenManager)
+
+            test("유효하지 않은 아이디를 입력하면 로그인 정보가 유효하지 않다는 결과를 반환한다") {
+                val result = repository.login(id = invalidId, password = validPassword)
+                result shouldBe LoginResult.INVALID_LOGIN_INFO
+            }
+
+            test("유효하지 않은 비밀번호를 입력하면 로그인 정보가 유효하지 않다는 결과를 반환한다") {
+                val result = repository.login(id = validId, password = invalidPassword)
+                result shouldBe LoginResult.INVALID_LOGIN_INFO
+            }
+        }
+
+        test("유효한 아이디와 비밀번호를 입력하면 API를 호출한다") {
+            val api = spyk<Api>()
+            val repository = FakeMyLoginRepositoryImpl(storage, tokenValidator, api, tokenManager)
+
+            repository.login(validId, validPassword)
+
+            coVerify { api.send(any()) }
+        }
+
+        test("유효한 아이디와 비밀번호를 입력하면 로그인이 성공했다는 결과를 반환한다") {
+            val api = mockk<Api>(relaxed = true)
+            val repository = FakeMyLoginRepositoryImpl(storage, tokenValidator, api, tokenManager)
+
+            repository.login(validId, validPassword) shouldBe LoginResult.OK
         }
     }
 })

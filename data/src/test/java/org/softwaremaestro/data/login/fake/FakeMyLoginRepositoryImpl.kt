@@ -1,16 +1,18 @@
 package org.softwaremaestro.data.login.fake
 
-import org.softwaremaestro.data.mylogin.TokenStorage
-import org.softwaremaestro.data.mylogin.TokenValidator
-import org.softwaremaestro.domain.mylogin.entity.Server
-import org.softwaremaestro.data.mylogin.TokenManager
+import org.softwaremaestro.domain.mylogin.entity.TokenStorage
+import org.softwaremaestro.domain.mylogin.entity.TokenValidator
+import org.softwaremaestro.domain.mylogin.entity.Api
+import org.softwaremaestro.domain.mylogin.entity.TokenManager
+import org.softwaremaestro.data.mylogin.dto.LoginRequestDto
 import org.softwaremaestro.domain.mylogin.MyLoginRepository
+import org.softwaremaestro.domain.mylogin.entity.LoginResult
 import org.softwaremaestro.domain.mylogin.entity.LoginToken
 
 class FakeMyLoginRepositoryImpl(
     private val tokenStorage: TokenStorage,
     private val validator: TokenValidator,
-    private val server: Server,
+    private val api: Api,
     private val tokenManager: TokenManager
 ): MyLoginRepository {
     override suspend fun save(token: LoginToken) {
@@ -29,9 +31,15 @@ class FakeMyLoginRepositoryImpl(
         return if (isValid) token else null
     }
 
-    override suspend fun login(id: String, password: String) {
-        val request = FakeRequestBuilder.build(id, password)
-        server.send(request)
+    override suspend fun login(id: String, password: String): LoginResult {
+        val dto = LoginRequestDto(id, password)
+        if (!dto.isValid()) {
+            return LoginResult.INVALID_LOGIN_INFO
+        }
+
+        api.send(dto)
+
+        return LoginResult.OK
     }
 
     override suspend fun autologin() {

@@ -1,4 +1,4 @@
-package org.softwaremaestro.data.mylogin
+package org.softwaremaestro.domain.mylogin.entity
 
 import org.softwaremaestro.domain.mylogin.entity.LoginToken
 
