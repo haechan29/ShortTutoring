@@ -12,7 +12,6 @@ import io.mockk.mockk
 import io.mockk.spyk
 import io.mockk.verify
 import org.softwaremaestro.data.mylogin.fake.FakeTokenRepository
-import org.softwaremaestro.domain.mylogin.entity.TokenValidator
 import org.softwaremaestro.domain.mylogin.entity.LoginAccessToken
 import org.softwaremaestro.domain.mylogin.entity.LoginRequestDto
 import org.softwaremaestro.domain.mylogin.entity.Api
@@ -24,9 +23,8 @@ class TokenRepositoryTest: FunSpec({
 
     context("액세스 토큰 인증을 진행한다") {
         val tokenStorage = mockk<TokenStorage>(relaxed = true)
-        val validator = mockk<TokenValidator>(relaxed = true)
         val api = mockk<Api>()
-        val tokenRepository = spyk(FakeTokenRepository(tokenStorage, validator, api), recordPrivateCalls = true)
+        val tokenRepository = spyk(FakeTokenRepository(tokenStorage, api), recordPrivateCalls = true)
 
         test("액세스 토큰 인증을 시작하면 저장된 액세스 토큰을 로드한다") {
             tokenRepository.authAccessToken()
@@ -49,7 +47,7 @@ class TokenRepositoryTest: FunSpec({
 
             tokenRepository.authAccessToken()
 
-            coVerify { validator.isValid(token) }
+            verify { token.isValid() }
         }
 
         test("유효하지 않은 액세스 토큰을 가지고 있다면 리프레시 토큰 인증을 시작한다") {
@@ -79,20 +77,19 @@ class TokenRepositoryTest: FunSpec({
 
     context("토큰을 저장한다") {
         val storage = mockk<TokenStorage>(relaxed = true)
-        val validator = mockk<TokenValidator>(relaxed = true)
         val api = mockk<Api>(relaxed = true)
-        val tokenRepository = FakeTokenRepository(storage, validator, api)
+        val tokenRepository = FakeTokenRepository(storage, api)
 
         val token = mockk<LoginToken>()
 
         test("토큰을 저장할 때 유효성을 검사한다") {
             tokenRepository.save(token)
 
-            verify { validator.isValid(token) }
+            verify { token.isValid() }
         }
 
         test("유효하지 않은 토큰은 TokenStorage에 저장하지 않는다") {
-            every { validator.isValid(token) } returns false
+            every { token.isValid() } returns false
 
             tokenRepository.save(token)
 
@@ -100,7 +97,7 @@ class TokenRepositoryTest: FunSpec({
         }
 
         test("유효한 토큰은 TokenStorage에 저장한다") {
-            every { validator.isValid(token) } returns true
+            every { token.isValid() } returns true
 
             tokenRepository.save(token)
 
@@ -108,12 +105,12 @@ class TokenRepositoryTest: FunSpec({
         }
 
         test("유효한 토큰을 저장할 때 유효성을 검사한 후에 TokenStorage에 저장한다") {
-            every { validator.isValid(token) } returns true
+            every { token.isValid() } returns false
 
             tokenRepository.save(token)
 
             coVerifyOrder {
-                validator.isValid(token)
+                token.isValid()
                 storage.save(token)
             }
         }
@@ -121,9 +118,8 @@ class TokenRepositoryTest: FunSpec({
 
     context("토큰을 로드한다") {
         val storage = mockk<TokenStorage>(relaxed = true)
-        val validator = mockk<TokenValidator>(relaxed = true)
         val api = mockk<Api>(relaxed = true)
-        val tokenRepository = FakeTokenRepository(storage, validator, api)
+        val tokenRepository = FakeTokenRepository(storage, api)
 
         test("로드할 토큰이 존재하지 않으면 null을 반환한다") {
             coEvery { storage.load() } returns null
@@ -138,28 +134,44 @@ class TokenRepositoryTest: FunSpec({
         }
 
         test("토큰을 로드할 때 유효성을 검사한다") {
+            val token = spyk<LoginToken>()
+
+            coEvery { storage.load() } returns token
+
             tokenRepository.load()
 
-            verify { validator.isValid(any()) }
+            verify { token.isValid() }
         }
 
         test("토큰을 로드할 때 TokenStorage에서 로드한 후에 유효성을 검사한다") {
+            val token = spyk<LoginToken>()
+
+            coEvery { storage.load() } returns token
+
             tokenRepository.load()
 
             coVerifyOrder {
                 storage.load()
-                validator.isValid(any())
+                token.isValid()
             }
         }
 
         test("로드한 토큰이 유효하지 않으면 null을 반환한다") {
-            every { validator.isValid(any()) } returns false
+            val invalidToken = spyk<LoginToken> {
+                every { isValid() } returns false
+            }
+
+            coEvery { storage.load() } returns invalidToken
 
             tokenRepository.load() shouldBe null
         }
 
         test("로드한 토큰이 유효하면 반환한다") {
-            every { validator.isValid(any()) } returns true
+            val validToken = spyk<LoginToken> {
+                every { isValid() } returns true
+            }
+
+            every { validToken.isValid() } returns true
 
             tokenRepository.load() shouldNotBe null
         }
