@@ -1,4 +1,4 @@
-package org.softwaremaestro.data.login.fake
+package org.softwaremaestro.data.mylogin.fake
 
 import org.softwaremaestro.domain.mylogin.entity.TokenValidator
 import org.softwaremaestro.domain.mylogin.entity.LoginToken

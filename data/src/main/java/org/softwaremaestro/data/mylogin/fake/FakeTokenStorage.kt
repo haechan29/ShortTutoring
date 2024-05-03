@@ -1,4 +1,4 @@
-package org.softwaremaestro.data.login.fake
+package org.softwaremaestro.data.mylogin.fake
 
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.delay

@@ -1,13 +1,11 @@
 package org.softwaremaestro.data.login.test
 
-import io.kotest.assertions.throwables.shouldNotThrow
-import io.kotest.assertions.throwables.shouldThrow
 import io.kotest.core.spec.IsolationMode
 import io.kotest.core.spec.style.FunSpec
 import io.kotest.matchers.shouldBe
 import io.mockk.every
 import io.mockk.mockk
-import org.softwaremaestro.data.login.fake.FakeTokenValidator
+import org.softwaremaestro.data.mylogin.fake.FakeTokenValidator
 import org.softwaremaestro.domain.mylogin.entity.LoginToken
 
 class TokenValidatorTest: FunSpec({

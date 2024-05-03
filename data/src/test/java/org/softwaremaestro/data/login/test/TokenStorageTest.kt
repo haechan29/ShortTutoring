@@ -1,12 +1,11 @@
 package org.softwaremaestro.data.login.test
 
-import io.kotest.assertions.throwables.shouldThrow
 import io.kotest.core.spec.IsolationMode
 import io.kotest.core.spec.style.FunSpec
 import io.kotest.matchers.shouldBe
 import io.mockk.every
 import io.mockk.mockk
-import org.softwaremaestro.data.login.fake.FakeTokenStorage
+import org.softwaremaestro.data.mylogin.fake.FakeTokenStorage
 import org.softwaremaestro.domain.mylogin.entity.LoginToken
 
 class TokenStorageTest: FunSpec({

@@ -4,20 +4,16 @@ import io.kotest.core.spec.IsolationMode
 import io.kotest.core.spec.style.FunSpec
 import io.mockk.coVerify
 import io.mockk.mockk
-import org.softwaremaestro.data.login.fake.FakeMyLoginRepositoryImpl
-import org.softwaremaestro.domain.mylogin.entity.TokenManager
-import org.softwaremaestro.domain.mylogin.entity.TokenStorage
-import org.softwaremaestro.domain.mylogin.entity.TokenValidator
+import org.softwaremaestro.data.mylogin.fake.FakeMyLoginRepositoryImpl
+import org.softwaremaestro.domain.mylogin.TokenRepository
 import org.softwaremaestro.domain.mylogin.entity.Api
 
 class LoginRepositoryTest2: FunSpec({
     isolationMode = IsolationMode.InstancePerLeaf
 
-    val storage = mockk<TokenStorage>(relaxed = true)
-    val validator = mockk<TokenValidator>(relaxed = true)
     val api = mockk<Api>(relaxed = true)
-    val tokenManager = mockk<TokenManager>(relaxed = true)
-    val repository = FakeMyLoginRepositoryImpl(storage, validator, api, tokenManager)
+    val tokenRepository = mockk<TokenRepository>(relaxed = true)
+    val repository = FakeMyLoginRepositoryImpl(api, tokenRepository)
 
     context("자동 로그인한다") {
         test("Splash Activity에 진입하면 자동 로그인을 시작한다") {
@@ -28,7 +24,7 @@ class LoginRepositoryTest2: FunSpec({
             repository.autologin()
 
             test("자동 로그인이 시작되면 액세스 토큰 인증을 시작한다") {
-                coVerify { tokenManager.authAccessToken() }
+                coVerify { tokenRepository.authAccessToken() }
             }
         }
 
