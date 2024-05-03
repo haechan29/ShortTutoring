@@ -2,17 +2,20 @@ package org.softwaremaestro.data.login.login2
 
 import io.kotest.core.spec.IsolationMode
 import io.kotest.core.spec.style.FunSpec
+import io.mockk.coEvery
 import io.mockk.coVerify
+import io.mockk.every
 import io.mockk.mockk
 import org.softwaremaestro.data.mylogin.fake.FakeMyLoginRepositoryImpl
 import org.softwaremaestro.domain.mylogin.TokenRepository
 import org.softwaremaestro.domain.mylogin.entity.Api
+import org.softwaremaestro.domain.mylogin.entity.LoginAccessToken
 
 class LoginRepositoryTest2: FunSpec({
     isolationMode = IsolationMode.InstancePerLeaf
 
     val api = mockk<Api>(relaxed = true)
-    val tokenRepository = mockk<TokenRepository>(relaxed = true)
+    val tokenRepository = mockk<TokenRepository<String>>(relaxed = true)
     val repository = FakeMyLoginRepositoryImpl(api, tokenRepository)
 
     context("자동 로그인한다") {
@@ -28,23 +31,16 @@ class LoginRepositoryTest2: FunSpec({
             }
         }
 
-        xcontext("실행하지 않을 테스트") {
+        xtest("액세스 토큰 인증이 실패하면 리프레시 토큰 인증을 시작한다") {
+            val invalidToken = mockk<LoginAccessToken> {
+                every { isValid() } returns false
+            }
 
-            test("유효한 액세스 토큰을 가지고 있다면 서버에 전송한다")
+            coEvery { tokenRepository["readAccessToken"]() } returns invalidToken
 
-            test("유효하지 않은 액세스 토큰을 가지고 있다면 InvalidAccessTokenException을 발생시킨다")
+            tokenRepository.authAccessToken()
 
-            test("리프레시 토큰 인증을 시작하면 리프레시 토큰을 가지고 있는지 확인한다")
-
-            test("리프레시 토큰을 가지고 있다면 유효성을 확인한다")
-
-            test("유효한 리프레시 토큰을 가지고 있다면 서버에 전송한다")
-
-            test("유효하지 않은 리프레시 토큰을 가지고 있다면 리프레시 토큰 인증을 실패 처리한다")
-
-            test("리프레시 토큰을 가지고 있지 않다면 리프레시 토큰 인증을 실패 처리한다")
-
-            test("리프레시 토큰 인증을 실패하면 이유를 밝힌다")
+            coVerify { tokenRepository.authRefreshToken() }
         }
     }
 
