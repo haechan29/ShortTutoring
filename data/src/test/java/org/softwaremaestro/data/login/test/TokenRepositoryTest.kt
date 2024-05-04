@@ -1,4 +1,4 @@
-package org.softwaremaestro.data.login.login2
+package org.softwaremaestro.data.login.test
 
 import io.kotest.core.spec.IsolationMode
 import io.kotest.core.spec.style.FunSpec
@@ -29,16 +29,14 @@ import org.softwaremaestro.domain.mylogin.entity.TokenStorage
 class TokenRepositoryTest: FunSpec({
     isolationMode = IsolationMode.InstancePerLeaf
 
+    val storage = mockk<TokenStorage>(relaxed = true)
+    val accessTokenAuthenticator = mockk<TokenAuthenticator>(relaxed = true)
+    val refreshTokenAuthenticator = mockk<TokenAuthenticator>(relaxed = true)
+    val tokenRepository = spyk(FakeTokenRepository(storage, accessTokenAuthenticator, refreshTokenAuthenticator), recordPrivateCalls = true)
 
+    val token = mockk<LoginToken>("", relaxed = true)
 
     context("토큰을 저장한다") {
-        val storage = mockk<TokenStorage>(relaxed = true)
-        val accessTokenAuthenticator = mockk<TokenAuthenticator>()
-        val refreshTokenAuthenticator = mockk<TokenAuthenticator>()
-        val tokenRepository = spyk(FakeTokenRepository(storage, accessTokenAuthenticator, refreshTokenAuthenticator), recordPrivateCalls = true)
-
-        val token = spyk(mockk<LoginToken>("", relaxed = true))
-
         test("토큰을 저장할 때 유효성을 검사한다") {
             tokenRepository.save(token)
 
@@ -74,12 +72,6 @@ class TokenRepositoryTest: FunSpec({
     }
 
     context("토큰을 로드한다") {
-        val storage = mockk<TokenStorage>(relaxed = true)
-        val accessTokenAuthenticator = mockk<TokenAuthenticator>()
-        val refreshTokenAuthenticator = mockk<TokenAuthenticator>()
-        val tokenRepository = spyk(FakeTokenRepository(storage, accessTokenAuthenticator, refreshTokenAuthenticator), recordPrivateCalls = true)
-
-        val token = spyk(mockk<LoginToken>(""))
 
         test("로드할 토큰이 존재하지 않으면 null을 반환한다") {
             coEvery { storage.load() } returns null

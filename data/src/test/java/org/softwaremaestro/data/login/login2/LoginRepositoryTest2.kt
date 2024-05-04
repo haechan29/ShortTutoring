@@ -10,6 +10,7 @@ import io.mockk.spyk
 import org.softwaremaestro.data.mylogin.fake.FakeMyLoginRepositoryImpl
 import org.softwaremaestro.domain.mylogin.TokenRepository
 import org.softwaremaestro.domain.mylogin.entity.Api
+import org.softwaremaestro.domain.mylogin.entity.Failure
 import org.softwaremaestro.domain.mylogin.entity.LoginAccessToken
 
 class LoginRepositoryTest2: FunSpec({
@@ -32,14 +33,8 @@ class LoginRepositoryTest2: FunSpec({
             coVerify { tokenRepository.authAccessToken() }
         }
 
-        xtest("액세스 토큰 인증이 실패하면 리프레시 토큰 인증을 시작한다") {
-            val invalidToken = mockk<LoginAccessToken> {
-                every { isValid() } returns false
-            }
-
-            coEvery { tokenRepository["readAccessToken"]() } returns invalidToken
-
-            tokenRepository.authAccessToken()
+        test("액세스 토큰 인증이 실패하면 리프레시 토큰 인증을 시작한다") {
+            coEvery { tokenRepository.authAccessToken() } returns mockk<Failure>()
 
             coVerify { tokenRepository.authRefreshToken() }
         }

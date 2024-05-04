@@ -21,7 +21,7 @@ class LoginRepositoryTest: FunSpec({
 
     context("로그인한다") {
         val tokenRepository = mockk<TokenRepository<String>>(relaxed = true)
-        val api = spyk<Api>()
+        val api = mockk<Api>(relaxed = true)
         val myLoginRepository = FakeMyLoginRepositoryImpl(api, tokenRepository)
 
         val validId = "id"
