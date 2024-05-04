@@ -6,6 +6,7 @@ import io.mockk.coEvery
 import io.mockk.coVerify
 import io.mockk.every
 import io.mockk.mockk
+import io.mockk.spyk
 import org.softwaremaestro.data.mylogin.fake.FakeMyLoginRepositoryImpl
 import org.softwaremaestro.domain.mylogin.TokenRepository
 import org.softwaremaestro.domain.mylogin.entity.Api
@@ -16,19 +17,19 @@ class LoginRepositoryTest2: FunSpec({
 
     val api = mockk<Api>(relaxed = true)
     val tokenRepository = mockk<TokenRepository<String>>(relaxed = true)
-    val repository = FakeMyLoginRepositoryImpl(api, tokenRepository)
+    val repository = spyk(FakeMyLoginRepositoryImpl(api, tokenRepository))
 
     context("자동 로그인한다") {
         test("Splash Activity에 진입하면 자동 로그인을 시작한다") {
             // TODO()
         }
+    }
 
-        context("자동 로그인한다") {
+    context("토큰 인증을 시작한다") {
+        test("자동 로그인이 시작되면 액세스 토큰 인증을 시작한다") {
             repository.autologin()
 
-            test("자동 로그인이 시작되면 액세스 토큰 인증을 시작한다") {
-                coVerify { tokenRepository.authAccessToken() }
-            }
+            coVerify { tokenRepository.authAccessToken() }
         }
 
         xtest("액세스 토큰 인증이 실패하면 리프레시 토큰 인증을 시작한다") {

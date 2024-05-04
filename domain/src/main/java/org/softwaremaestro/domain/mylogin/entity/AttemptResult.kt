@@ -1,7 +1,9 @@
 package org.softwaremaestro.domain.mylogin.entity
 
 sealed class AttemptResult<out T>
-abstract class Failure(val message: String): AttemptResult<Nothing>() {
+abstract class Failure: AttemptResult<Nothing>() {
+    abstract val message: String
+
     companion object {
         const val ACCESS_TOKEN_NOT_FOUND  = "액세스 토큰이 존재하지 않습니다"
         const val INVALID_ACCESS_TOKEN    = "액세스 토큰이 유효하지 않습니다"
@@ -9,9 +11,13 @@ abstract class Failure(val message: String): AttemptResult<Nothing>() {
         const val INVALID_REFRESH_TOKEN   = "리프레시 토큰이 유효하지 않습니다"
     }
 }
-object AccessTokenNotFound : Failure(ACCESS_TOKEN_NOT_FOUND)
-object InvalidAccessToken  : Failure(INVALID_ACCESS_TOKEN)
-object RefreshTokenNotFound: Failure(REFRESH_TOKEN_NOT_FOUND)
-object InvalidRefreshToken : Failure(INVALID_REFRESH_TOKEN)
+
+sealed class TokenNotFound  : Failure()
+object AccessTokenNotFound  : TokenNotFound() { override val message = ACCESS_TOKEN_NOT_FOUND }
+object RefreshTokenNotFound : TokenNotFound() { override val message = REFRESH_TOKEN_NOT_FOUND }
+
+sealed class InvalidToken   : Failure()
+object InvalidAccessToken   : InvalidToken() { override val message = INVALID_ACCESS_TOKEN }
+object InvalidRefreshToken  : InvalidToken() { override val message = INVALID_REFRESH_TOKEN }
 
 data class Ok<T>(val body: T): AttemptResult<T>()

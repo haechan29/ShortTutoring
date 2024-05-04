@@ -5,6 +5,7 @@ import io.kotest.core.spec.style.FunSpec
 import io.kotest.matchers.should
 import io.kotest.matchers.shouldBe
 import io.kotest.matchers.shouldNotBe
+import io.kotest.matchers.types.beInstanceOf
 import io.kotest.matchers.types.beOfType
 import io.mockk.coVerify
 import io.mockk.mockk
@@ -31,12 +32,12 @@ class LoginRepositoryTest: FunSpec({
         context("아이디와 비밀번호를 검증한다") {
             test("유효하지 않은 아이디를 입력하면 로그인 정보가 유효하지 않다는 결과를 반환한다") {
                 val result = myLoginRepository.login(id = invalidId, password = validPassword)
-                result shouldBe Failure
+                result should beInstanceOf<Failure>()
             }
 
             test("유효하지 않은 비밀번호를 입력하면 로그인 정보가 유효하지 않다는 결과를 반환한다") {
                 val result = myLoginRepository.login(id = validId, password = invalidPassword)
-                result shouldBe Failure
+                result should beInstanceOf<Failure>()
             }
         }
 
