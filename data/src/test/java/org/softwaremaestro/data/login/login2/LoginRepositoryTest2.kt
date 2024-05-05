@@ -2,48 +2,21 @@ package org.softwaremaestro.data.login.login2
 
 import io.kotest.core.spec.IsolationMode
 import io.kotest.core.spec.style.FunSpec
-import io.mockk.coEvery
-import io.mockk.coVerify
 import io.mockk.every
 import io.mockk.mockk
-import io.mockk.spyk
-import org.softwaremaestro.data.mylogin.fake.FakeMyLoginRepositoryImpl
+import io.mockk.mockkObject
+import org.softwaremaestro.data.mylogin.fake.FakeMyLoginRepository
 import org.softwaremaestro.domain.mylogin.TokenRepository
-import org.softwaremaestro.domain.mylogin.entity.Api
-import org.softwaremaestro.domain.mylogin.entity.Failure
-import org.softwaremaestro.domain.mylogin.entity.LoginAccessToken
+import org.softwaremaestro.domain.mylogin.entity.LoginApi
 
 class LoginRepositoryTest2: FunSpec({
     isolationMode = IsolationMode.InstancePerLeaf
 
-    val api = mockk<Api>(relaxed = true)
-    val tokenRepository = mockk<TokenRepository<String>>(relaxed = true)
-    val repository = spyk(FakeMyLoginRepositoryImpl(api, tokenRepository))
-
-    context("자동 로그인한다") {
-        test("Splash Activity에 진입하면 자동 로그인을 시작한다") {
-            // TODO()
-        }
-    }
-
-    context("토큰 인증을 시작한다") {
-        test("자동 로그인이 시작되면 액세스 토큰 인증을 시작한다") {
-            repository.autologin()
-
-            coVerify { tokenRepository.authAccessToken() }
-        }
-
-        test("액세스 토큰 인증이 실패하면 리프레시 토큰 인증을 시작한다") {
-            coEvery { tokenRepository.authAccessToken() } returns mockk<Failure>()
-
-            coVerify { tokenRepository.authRefreshToken() }
-        }
-    }
-
-    xcontext("요청을 전송한다") {
-        test("요청을 전송하기 전에 토큰의 유효성을 확인한다")
-
-        test("요청을 전송할 때 액세스 토큰을 요청 헤더에 삽입한다")
+    val mockApi = mockk<LoginApi>(relaxed = true)
+    val mockTokenRepository = mockk<TokenRepository>(relaxed = true)
+    mockkObject(FakeMyLoginRepository) {
+        every { mockApi } returns mockApi
+        every { mockTokenRepository } returns mockTokenRepository
     }
 
     xcontext("응답을 처리한다") {

@@ -1,34 +1,52 @@
 package org.softwaremaestro.data.mylogin.fake
 
 import org.softwaremaestro.domain.mylogin.TokenRepository
-import org.softwaremaestro.domain.mylogin.entity.AttemptResult
+import org.softwaremaestro.domain.mylogin.entity.AccessTokenNotFound
+import org.softwaremaestro.domain.mylogin.entity.InvalidAccessToken
+import org.softwaremaestro.domain.mylogin.entity.InvalidRefreshToken
+import org.softwaremaestro.domain.mylogin.entity.InvalidToken
+import org.softwaremaestro.domain.mylogin.entity.NetworkResult
 import org.softwaremaestro.domain.mylogin.entity.LoginToken
+import org.softwaremaestro.domain.mylogin.entity.Ok
+import org.softwaremaestro.domain.mylogin.entity.RefreshTokenNotFound
 import org.softwaremaestro.domain.mylogin.entity.TokenAuthenticator
+import org.softwaremaestro.domain.mylogin.entity.TokenNotFound
 import org.softwaremaestro.domain.mylogin.entity.TokenStorage
 
-class FakeTokenRepository(
-    private val tokenStorage: TokenStorage,
-    private val accessTokenAuthenticator: TokenAuthenticator,
-    private val refreshTokenAuthenticator: TokenAuthenticator,
-): TokenRepository<String> {
+abstract class FakeTokenRepository: TokenRepository {
+    override val tokenStorage: TokenStorage = FakeTokenStorage
 
-    override suspend fun authAccessToken(): AttemptResult<String> {
-        return accessTokenAuthenticator.authToken()
+    override suspend fun save(token: LoginToken): NetworkResult<Any> {
+        if (!token.isValid()) return invalidTokenFailure
+
+        tokenStorage.save(token)
+
+        return Ok(Unit)
     }
 
-    override suspend fun authRefreshToken(): AttemptResult<String> {
-        return refreshTokenAuthenticator.authToken()
-    }
-
-    override suspend fun save(token: LoginToken) {
-        if (token.isValid()) {
-            tokenStorage.save(token)
+    override suspend fun load(): NetworkResult<LoginToken> {
+        val token = tokenStorage.load()
+        with (token) {
+            if (this == null) return tokenNotFoundFailure
+            if (!isValid()) return invalidTokenFailure
         }
+
+        return Ok(token!!)
     }
 
-    override suspend fun load(): LoginToken? {
-        val token = tokenStorage.load() ?: return null
-
-        return if (token.isValid()) token else null
+    override suspend fun authToken(): NetworkResult<Any> {
+        return tokenAuthenticator.authToken()
     }
+}
+
+object FakeAccessTokenRepository: FakeTokenRepository() {
+    override val tokenNotFoundFailure: TokenNotFound = AccessTokenNotFound
+    override val invalidTokenFailure: InvalidToken = InvalidAccessToken
+    override val tokenAuthenticator: TokenAuthenticator = FakeAccessTokenAuthenticator
+}
+
+object FakeRefreshTokenRepository: FakeTokenRepository() {
+    override val tokenNotFoundFailure: TokenNotFound = RefreshTokenNotFound
+    override val invalidTokenFailure: InvalidToken = InvalidRefreshToken
+    override val tokenAuthenticator: TokenAuthenticator = FakeRefreshTokenAuthenticator
 }

@@ -1,7 +1,7 @@
 package org.softwaremaestro.domain.mylogin.entity
 
-sealed class AttemptResult<out T>
-abstract class Failure: AttemptResult<Nothing>() {
+sealed class NetworkResult<out T>
+abstract class Failure: NetworkResult<Nothing>() {
     abstract val message: String
 
     companion object {
@@ -20,4 +20,4 @@ sealed class InvalidToken   : Failure()
 object InvalidAccessToken   : InvalidToken() { override val message = INVALID_ACCESS_TOKEN }
 object InvalidRefreshToken  : InvalidToken() { override val message = INVALID_REFRESH_TOKEN }
 
-data class Ok<T>(val body: T): AttemptResult<T>()
+data class Ok<T>(val body: T): NetworkResult<T>()

@@ -7,7 +7,7 @@ import org.softwaremaestro.domain.mylogin.entity.TokenStorage
 import org.softwaremaestro.domain.mylogin.entity.LoginToken
 
 object FakeTokenStorage: TokenStorage {
-    private var savedToken: LoginToken? = null
+    var savedToken: LoginToken? = null
 
     override suspend fun save(token: LoginToken) {
         withContext(Dispatchers.IO) {

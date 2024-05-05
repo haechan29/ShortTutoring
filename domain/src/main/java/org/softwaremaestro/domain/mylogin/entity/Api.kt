@@ -1,7 +1,15 @@
 package org.softwaremaestro.domain.mylogin.entity
 
 interface Api {
-    suspend fun send(dto: RequestDto): Unit
+    suspend fun sendRequest(): NetworkResult<Any> {
+        return Ok("")
+    }
 }
 
-interface LoginApi: Api
+interface LoginApi: Api {
+    suspend fun login(): NetworkResult<Any>
+}
+
+interface AuthTokenApi: Api {
+    suspend fun authToken(): NetworkResult<Any>
+}
