@@ -54,7 +54,7 @@ class TokenRepositoryTest: FunSpec({
     val token = mockk<LoginToken>(relaxed = true)
 
     context("토큰을 저장한다") {
-        test("토큰을 저장할 때 유효성을 검사한다") {
+        test("토큰을 저장할 때 유효성을 검증한다") {
             tokenRepository.save(token)
 
             verify { token.isValid() }
@@ -97,7 +97,7 @@ class TokenRepositoryTest: FunSpec({
                 coVerify { FakeTokenStorage.save(token) }
             }
 
-            test("토큰을 저장할 때 유효성을 검사한 후에 TokenStorage에 저장한다") {
+            test("토큰을 저장할 때 유효성을 검증한 후에 TokenStorage에 저장한다") {
                 tokenRepository.save(token)
 
                 coVerifyOrder {
@@ -150,13 +150,13 @@ class TokenRepositoryTest: FunSpec({
         context("로드할 토큰이 존재하면") {
             coEvery { FakeTokenStorage.load() } returns token
 
-            test("로드할 토큰이 존재하면 유효성을 검사한다") {
+            test("로드할 토큰이 존재하면 유효성을 검증한다") {
                 tokenRepository.load()
 
                 verify { token.isValid() }
             }
 
-            test("TokenStorage에서 로드한 후에 유효성을 검사한다") {
+            test("TokenStorage에서 로드한 후에 유효성을 검증한다") {
                 tokenRepository.load()
 
                 coVerifyOrder {
