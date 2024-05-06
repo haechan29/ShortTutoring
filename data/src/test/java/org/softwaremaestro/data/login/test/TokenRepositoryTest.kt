@@ -4,9 +4,7 @@ import io.kotest.core.spec.IsolationMode
 import io.kotest.core.spec.style.FunSpec
 import io.kotest.matchers.should
 import io.kotest.matchers.shouldBe
-import io.kotest.matchers.shouldNotBe
 import io.kotest.matchers.types.beInstanceOf
-import io.kotest.matchers.types.beOfType
 import io.mockk.coEvery
 import io.mockk.coVerify
 import io.mockk.coVerifyOrder
@@ -16,27 +14,19 @@ import io.mockk.mockkObject
 import io.mockk.spyk
 import io.mockk.unmockkAll
 import io.mockk.verify
-import org.softwaremaestro.data.mylogin.fake.FakeAccessTokenAuthenticator
 import org.softwaremaestro.data.mylogin.fake.FakeAccessTokenRepository
-import org.softwaremaestro.data.mylogin.fake.FakeRefreshTokenAuthenticator
 import org.softwaremaestro.data.mylogin.fake.FakeRefreshTokenRepository
 import org.softwaremaestro.data.mylogin.fake.FakeTokenRepository
 import org.softwaremaestro.data.mylogin.fake.FakeTokenStorage
-import org.softwaremaestro.domain.mylogin.entity.AccessTokenNotFound
-import org.softwaremaestro.domain.mylogin.entity.LoginAccessToken
 import org.softwaremaestro.domain.mylogin.entity.Failure
 import org.softwaremaestro.domain.mylogin.entity.Failure.Companion.ACCESS_TOKEN_NOT_FOUND
 import org.softwaremaestro.domain.mylogin.entity.Failure.Companion.INVALID_ACCESS_TOKEN
 import org.softwaremaestro.domain.mylogin.entity.Failure.Companion.INVALID_REFRESH_TOKEN
 import org.softwaremaestro.domain.mylogin.entity.Failure.Companion.REFRESH_TOKEN_NOT_FOUND
-import org.softwaremaestro.domain.mylogin.entity.InvalidAccessToken
 import org.softwaremaestro.domain.mylogin.entity.InvalidToken
-import org.softwaremaestro.domain.mylogin.entity.LoginRefreshToken
 import org.softwaremaestro.domain.mylogin.entity.LoginToken
 import org.softwaremaestro.domain.mylogin.entity.Ok
-import org.softwaremaestro.domain.mylogin.entity.TokenAuthenticator
 import org.softwaremaestro.domain.mylogin.entity.TokenNotFound
-import org.softwaremaestro.domain.mylogin.entity.TokenStorage
 
 class TokenRepositoryTest: FunSpec({
     isolationMode = IsolationMode.InstancePerLeaf

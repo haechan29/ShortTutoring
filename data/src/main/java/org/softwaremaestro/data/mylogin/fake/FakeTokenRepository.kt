@@ -9,7 +9,6 @@ import org.softwaremaestro.domain.mylogin.entity.NetworkResult
 import org.softwaremaestro.domain.mylogin.entity.LoginToken
 import org.softwaremaestro.domain.mylogin.entity.Ok
 import org.softwaremaestro.domain.mylogin.entity.RefreshTokenNotFound
-import org.softwaremaestro.domain.mylogin.entity.TokenAuthenticator
 import org.softwaremaestro.domain.mylogin.entity.TokenNotFound
 import org.softwaremaestro.domain.mylogin.entity.TokenStorage
 
@@ -33,20 +32,14 @@ abstract class FakeTokenRepository: TokenRepository {
 
         return Ok(token!!)
     }
-
-    override suspend fun authToken(): NetworkResult<Any> {
-        return tokenAuthenticator.authToken()
-    }
 }
 
 object FakeAccessTokenRepository: FakeTokenRepository() {
     override val tokenNotFoundFailure: TokenNotFound = AccessTokenNotFound
     override val invalidTokenFailure: InvalidToken = InvalidAccessToken
-    override val tokenAuthenticator: TokenAuthenticator = FakeAccessTokenAuthenticator
 }
 
 object FakeRefreshTokenRepository: FakeTokenRepository() {
     override val tokenNotFoundFailure: TokenNotFound = RefreshTokenNotFound
     override val invalidTokenFailure: InvalidToken = InvalidRefreshToken
-    override val tokenAuthenticator: TokenAuthenticator = FakeRefreshTokenAuthenticator
 }

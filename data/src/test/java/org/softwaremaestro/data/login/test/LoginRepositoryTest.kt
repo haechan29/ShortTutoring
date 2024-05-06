@@ -113,15 +113,15 @@ class LoginRepositoryTest: FunSpec({
         test("자동 로그인이 시작되면 액세스 토큰 인증을 시작한다") {
             FakeMyLoginRepository.autologin()
 
-            coVerify { FakeAccessTokenRepository.authToken() }
+            coVerify { FakeAccessTokenRepository.load() }
         }
 
         test("액세스 토큰 인증이 실패하면 리프레시 토큰 인증을 시작한다") {
-            coEvery { FakeAccessTokenRepository.authToken() } returns spyk<Failure>()
+            coEvery { FakeAccessTokenRepository.load() } returns spyk<Failure>()
 
             FakeMyLoginRepository.autologin()
 
-            coVerify { FakeRefreshTokenRepository.authToken() }
+            coVerify { FakeRefreshTokenRepository.load() }
         }
     }
 

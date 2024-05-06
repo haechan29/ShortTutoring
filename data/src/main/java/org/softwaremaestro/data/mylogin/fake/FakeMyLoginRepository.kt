@@ -26,11 +26,11 @@ object FakeMyLoginRepository: MyLoginRepository {
     }
 
     override suspend fun autologin() {
-        when (val result = FakeAccessTokenRepository.authToken()) {
+        when (val result = FakeAccessTokenRepository.load()) {
             is Ok -> return
             is Failure -> {
                 result.message // handle message
-                FakeRefreshTokenRepository.authToken()
+                FakeRefreshTokenRepository.load()
             }
         }
     }
