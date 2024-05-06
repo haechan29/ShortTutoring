@@ -7,6 +7,7 @@ import org.softwaremaestro.domain.mylogin.entity.Failure
 import org.softwaremaestro.domain.mylogin.entity.InvalidAccessToken
 import org.softwaremaestro.domain.mylogin.entity.InvalidToken
 import org.softwaremaestro.domain.mylogin.entity.LoginToken
+import org.softwaremaestro.domain.mylogin.entity.NetworkResult
 import org.softwaremaestro.domain.mylogin.entity.TokenNotFound
 
 object FakeAccessTokenAuthenticator: FakeTokenAuthenticator() {
@@ -14,6 +15,10 @@ object FakeAccessTokenAuthenticator: FakeTokenAuthenticator() {
 
     override val tokenNotFoundFailure: TokenNotFound = AccessTokenNotFound
     override val invalidTokenFailure: InvalidToken = InvalidAccessToken
+
+    override suspend fun authToken(): NetworkResult<Any> {
+        return super.authToken()
+    }
 
     override suspend fun readToken(): LoginToken? {
         delay(100)

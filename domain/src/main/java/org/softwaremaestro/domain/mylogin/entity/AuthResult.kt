@@ -1,7 +1,9 @@
 package org.softwaremaestro.domain.mylogin.entity
 
-enum class AuthResult {
-    ACCESS_TOKEN_IS_AUTHENTICATED,
-    ACCESS_TOKEN_IS_NOT_AUTHENTICATED,
-    REFRESH_TOKEN_IS_NOT_AUTHENTICATED
-}
+interface AuthResult
+interface AuthOk: AuthResult
+sealed interface AuthFailure: AuthResult
+
+object AccessTokenIsAuthenticated: AuthOk
+object AccessTokenIsNotAuthenticated: AuthFailure
+object RefreshTokenIsNotAuthenticated: AuthFailure
