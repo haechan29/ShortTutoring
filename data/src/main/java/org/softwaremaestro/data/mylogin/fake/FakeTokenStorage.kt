@@ -3,13 +3,15 @@ package org.softwaremaestro.data.mylogin.fake
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.delay
 import kotlinx.coroutines.withContext
+import org.softwaremaestro.domain.mylogin.entity.LoginAccessToken
+import org.softwaremaestro.domain.mylogin.entity.LoginRefreshToken
 import org.softwaremaestro.domain.mylogin.entity.TokenStorage
 import org.softwaremaestro.domain.mylogin.entity.LoginToken
 
-object FakeTokenStorage: TokenStorage {
-    var savedToken: LoginToken? = null
+abstract class FakeTokenStorage<Token: LoginToken>: TokenStorage<Token> {
+    var savedToken: Token? = null
 
-    override suspend fun save(token: LoginToken) {
+    override suspend fun save(token: Token) {
         withContext(Dispatchers.IO) {
             delay(1000)
             // TODO
@@ -17,7 +19,7 @@ object FakeTokenStorage: TokenStorage {
         }
     }
 
-    override suspend fun load(): LoginToken? {
+    override suspend fun load(): Token? {
         return withContext(Dispatchers.IO) {
             delay(1000)
             savedToken
@@ -28,3 +30,6 @@ object FakeTokenStorage: TokenStorage {
         savedToken = null
     }
 }
+
+object FakeAccessTokenStorage: FakeTokenStorage<LoginAccessToken>()
+object FakeRefreshTokenStorage: FakeTokenStorage<LoginRefreshToken>()

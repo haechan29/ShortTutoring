@@ -5,6 +5,8 @@ import org.softwaremaestro.domain.mylogin.entity.AccessTokenNotFound
 import org.softwaremaestro.domain.mylogin.entity.InvalidAccessToken
 import org.softwaremaestro.domain.mylogin.entity.InvalidRefreshToken
 import org.softwaremaestro.domain.mylogin.entity.InvalidToken
+import org.softwaremaestro.domain.mylogin.entity.LoginAccessToken
+import org.softwaremaestro.domain.mylogin.entity.LoginRefreshToken
 import org.softwaremaestro.domain.mylogin.entity.NetworkResult
 import org.softwaremaestro.domain.mylogin.entity.LoginToken
 import org.softwaremaestro.domain.mylogin.entity.Ok
@@ -12,19 +14,26 @@ import org.softwaremaestro.domain.mylogin.entity.RefreshTokenNotFound
 import org.softwaremaestro.domain.mylogin.entity.TokenNotFound
 import org.softwaremaestro.domain.mylogin.entity.TokenStorage
 
-abstract class FakeTokenRepository: TokenRepository {
-    override val tokenStorage: TokenStorage = FakeTokenStorage
+abstract class FakeTokenRepository<Token: LoginToken>: TokenRepository<Token> {
+    protected abstract val tokenStorage: TokenStorage<Token>
 
-    override suspend fun save(token: LoginToken): NetworkResult<Any> {
+    abstract val tokenNotFoundFailure: TokenNotFound
+    abstract val invalidTokenFailure: InvalidToken
+
+    override suspend fun save(token: Token): NetworkResult<Unit> {
         if (!token.isValid()) return invalidTokenFailure
 
-        tokenStorage.save(token)
+        saveToStorage(token)
 
         return Ok(Unit)
     }
 
-    override suspend fun load(): NetworkResult<LoginToken> {
-        val token = tokenStorage.load()
+    private suspend fun saveToStorage(token: Token) {
+        return tokenStorage.save(token)
+    }
+
+    override suspend fun load(): NetworkResult<Token> {
+        val token = loadFromStorage()
         with (token) {
             if (this == null) return tokenNotFoundFailure
             if (!isValid()) return invalidTokenFailure
@@ -32,14 +41,22 @@ abstract class FakeTokenRepository: TokenRepository {
 
         return Ok(token!!)
     }
+
+    private suspend fun loadFromStorage(): Token? {
+        return tokenStorage.load()
+    }
 }
 
-object FakeAccessTokenRepository: FakeTokenRepository() {
+object FakeAccessTokenRepository: FakeTokenRepository<LoginAccessToken>() {
+    override val tokenStorage: TokenStorage<LoginAccessToken> = FakeAccessTokenStorage
+
     override val tokenNotFoundFailure: TokenNotFound = AccessTokenNotFound
     override val invalidTokenFailure: InvalidToken = InvalidAccessToken
 }
 
-object FakeRefreshTokenRepository: FakeTokenRepository() {
+object FakeRefreshTokenRepository: FakeTokenRepository<LoginRefreshToken>() {
+    override val tokenStorage: TokenStorage<LoginRefreshToken> = FakeRefreshTokenStorage
+
     override val tokenNotFoundFailure: TokenNotFound = RefreshTokenNotFound
     override val invalidTokenFailure: InvalidToken = InvalidRefreshToken
 }

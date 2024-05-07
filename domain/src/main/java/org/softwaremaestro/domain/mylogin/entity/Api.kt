@@ -21,9 +21,7 @@ interface Api {
 }
 
 interface LoginApi: Api {
-    suspend fun login(): NetworkResult<Any>
+    suspend fun login(): NetworkResult<LoginToken>
 }
 
-interface IssueTokenApi: Api {
-    suspend fun issueToken(): NetworkResult<Any>
-}
+interface IssueTokenApi: Api

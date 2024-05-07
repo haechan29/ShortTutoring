@@ -21,6 +21,8 @@ import org.softwaremaestro.domain.mylogin.entity.RequestDto
 class ApiTest: FunSpec({
     isolationMode = IsolationMode.InstancePerLeaf
 
+    beforeEach { unmockkAll() }
+
     val mockDto = mockk<RequestDto>()
     val mockRequest = mockk<Request>()
     val serverResult = mockk<NetworkResult<Any>>()

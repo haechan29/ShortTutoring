@@ -10,10 +10,6 @@ import org.softwaremaestro.domain.mylogin.entity.Server
 object FakeIssueAccessTokenApi: IssueTokenApi {
     override val server: Server = FakeServer
 
-    override suspend fun issueToken(): NetworkResult<Any> {
-        return Ok(Unit)
-    }
-
     override fun toRequest(dto: RequestDto): Request {
         TODO("Not yet implemented")
     }
@@ -21,10 +17,6 @@ object FakeIssueAccessTokenApi: IssueTokenApi {
 
 object FakeIssueRefreshTokenApi: IssueTokenApi {
     override val server: Server = FakeServer
-
-    override suspend fun issueToken(): NetworkResult<Any> {
-        return Ok(Unit)
-    }
 
     override fun toRequest(dto: RequestDto): Request {
         TODO("Not yet implemented")

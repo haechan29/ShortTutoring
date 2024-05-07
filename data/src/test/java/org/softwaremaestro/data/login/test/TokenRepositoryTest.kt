@@ -24,26 +24,35 @@ import org.softwaremaestro.domain.mylogin.entity.Failure.Companion.INVALID_ACCES
 import org.softwaremaestro.domain.mylogin.entity.Failure.Companion.INVALID_REFRESH_TOKEN
 import org.softwaremaestro.domain.mylogin.entity.Failure.Companion.REFRESH_TOKEN_NOT_FOUND
 import org.softwaremaestro.domain.mylogin.entity.InvalidToken
+import org.softwaremaestro.domain.mylogin.entity.LoginAccessToken
+import org.softwaremaestro.domain.mylogin.entity.LoginRefreshToken
 import org.softwaremaestro.domain.mylogin.entity.LoginToken
+import org.softwaremaestro.domain.mylogin.entity.NetworkResult
 import org.softwaremaestro.domain.mylogin.entity.Ok
 import org.softwaremaestro.domain.mylogin.entity.TokenNotFound
+import org.softwaremaestro.domain.mylogin.entity.TokenStorage
 
 class TokenRepositoryTest: FunSpec({
     isolationMode = IsolationMode.InstancePerLeaf
 
-    mockkObject(FakeTokenStorage)
+    beforeEach { unmockkAll() }
 
-    val tokenRepository = spyk<FakeTokenRepository>(recordPrivateCalls = true) {
+    val fakeAccessTokenRepository = FakeAccessTokenRepository
+    val fakeRefreshTokenRepository = FakeRefreshTokenRepository
+
+    mockkObject(fakeAccessTokenRepository)
+    mockkObject(fakeRefreshTokenRepository)
+
+    val tokenRepository = spyk<FakeTokenRepository<LoginToken>>(recordPrivateCalls = true) {
         every { tokenNotFoundFailure } returns mockk<TokenNotFound>()
         every { invalidTokenFailure } returns mockk<InvalidToken>()
     }
 
-    mockkObject(FakeAccessTokenRepository)
-    mockkObject(FakeRefreshTokenRepository)
-
-    val token = mockk<LoginToken>(relaxed = true)
-
     context("토큰을 저장한다") {
+        every { tokenRepository["saveToStorage"](ofType<LoginToken>()) } returns Unit
+
+        val token = mockk<LoginToken>(relaxed = true)
+
         test("토큰을 저장할 때 유효성을 검증한다") {
             tokenRepository.save(token)
 
@@ -51,72 +60,81 @@ class TokenRepositoryTest: FunSpec({
         }
 
         context("토큰이 유효하지 않으면") {
-            every { token.isValid() } returns false
+            val invalidToken = mockk<LoginToken> {
+                every { isValid() } returns false
+            }
+
+            val result = tokenRepository.save(invalidToken)
 
             test("TokenStorage에 저장하지 않는다") {
-                tokenRepository.save(token)
-
-                coVerify(exactly = 0) { FakeTokenStorage.save(token) }
+                coVerify(exactly = 0) { tokenRepository["saveToStorage"](invalidToken) }
             }
 
             test("저장을 실패 처리한다") {
-                tokenRepository.save(token) should beInstanceOf<Failure>()
+                result should beInstanceOf<Failure>()
             }
 
             context("토큰이 유효하지 않아서 저장이 실패했음을 알린다") {
+                val invalidAccessToken = mockk<LoginAccessToken> {
+                    every { isValid() } returns false
+                }
+
+                val invalidRefreshToken = mockk<LoginRefreshToken> {
+                    every { isValid() } returns false
+                }
+
                 test("액세스 토큰이 유효하지 않아서 저장이 실패했음을 알린다") {
-                    val result = FakeAccessTokenRepository.save(token) as Failure
+                    val result = fakeAccessTokenRepository.save(invalidAccessToken) as Failure
 
                     result.message shouldBe INVALID_ACCESS_TOKEN
                 }
 
                 test("리프레시 토큰이 유효하지 않아서 저장이 실패했음을 알린다") {
-                    val result = FakeRefreshTokenRepository.save(token) as Failure
+                    val result = fakeRefreshTokenRepository.save(invalidRefreshToken) as Failure
 
                     result.message shouldBe INVALID_REFRESH_TOKEN
                 }
             }
         }
 
-        context ("토큰이 유효하면") {
-            every { token.isValid() } returns true
+        context("토큰이 유효하면") {
+            val validToken = mockk<LoginToken> {
+                every { isValid() } returns true
+            }
+
+            val result = tokenRepository.save(validToken)
 
             test("TokenStorage에 저장한다") {
-                tokenRepository.save(token)
-
-                coVerify { FakeTokenStorage.save(token) }
+                coVerify { tokenRepository["saveToStorage"](validToken) }
             }
 
             test("토큰을 저장할 때 유효성을 검증한 후에 TokenStorage에 저장한다") {
-                tokenRepository.save(token)
-
                 coVerifyOrder {
-                    token.isValid()
-                    FakeTokenStorage.save(token)
+                    validToken.isValid()
+                    tokenRepository["saveToStorage"](validToken)
                 }
             }
 
-            test("토큰이 유효하면 TokenStorage에 저장한다") {
-                tokenRepository.save(token)
-
-                coVerify { FakeTokenStorage.save(token) }
-            }
-
             test("저장을 성공 처리한다") {
-                tokenRepository.save(token) should beInstanceOf<Ok<Any>>()
+                result should beInstanceOf<Ok<Any>>()
             }
         }
     }
 
     context("토큰을 로드한다") {
+        val token = mockk<LoginToken>(relaxed = true)
+        every { tokenRepository["loadFromStorage"]() } returns token
+
         test("토큰을 로드할 때 TokenStorage에서 로드한다") {
             tokenRepository.load()
 
-            coVerify { FakeTokenStorage.load() }
+            coVerify { tokenRepository["loadFromStorage"]() }
         }
 
         context("로드할 토큰이 존재하지 않으면") {
-            coEvery { FakeTokenStorage.load() } returns null
+            coEvery { tokenRepository["loadFromStorage"]() } returns null
+            coEvery { fakeAccessTokenRepository["loadFromStorage"]() } returns null
+            coEvery { fakeRefreshTokenRepository["loadFromStorage"]() } returns null
 
             test("로드를 실패 처리한다") {
                 tokenRepository.load() should beInstanceOf<Failure>()
@@ -124,13 +142,13 @@ class TokenRepositoryTest: FunSpec({
 
             context("토큰이 존재하지 않아 로드가 실패했음을 알린다") {
                 test("액세스 토큰이 존재하지 않아 로드가 실패했음을 알린다") {
-                    val result = FakeAccessTokenRepository.load() as Failure
+                    val result = fakeAccessTokenRepository.load() as Failure
 
                     result.message shouldBe ACCESS_TOKEN_NOT_FOUND
                 }
 
                 test("리프레시 토큰이 존재하지 않아 로드가 실패했음을 알린다") {
-                    val result = FakeRefreshTokenRepository.load() as Failure
+                    val result = fakeRefreshTokenRepository.load() as Failure
 
                     result.message shouldBe REFRESH_TOKEN_NOT_FOUND
                 }
@@ -138,7 +156,7 @@ class TokenRepositoryTest: FunSpec({
         }
 
         context("로드할 토큰이 존재하면") {
-            coEvery { FakeTokenStorage.load() } returns token
+            coEvery { tokenRepository["loadFromStorage"]() } returns token
 
             test("로드할 토큰이 존재하면 유효성을 검증한다") {
                 tokenRepository.load()
@@ -150,16 +168,22 @@ class TokenRepositoryTest: FunSpec({
                 tokenRepository.load()
 
                 coVerifyOrder {
-                    FakeTokenStorage.load()
+                    tokenRepository["loadFromStorage"]()
                     token.isValid()
                 }
             }
         }
 
         context("로드한 토큰이 유효하지 않으면") {
-            every { token.isValid() } returns false
+            val invalidToken = mockk<LoginToken> {
+                every { isValid() } returns false
+            }
 
-            coEvery { FakeTokenStorage.load() } returns token
+            coEvery { tokenRepository["loadFromStorage"]() } returns invalidToken
+
+            coEvery { fakeAccessTokenRepository["loadFromStorage"]() } returns invalidToken
+
+            coEvery { fakeRefreshTokenRepository["loadFromStorage"]() } returns invalidToken
 
             test("로드를 실패 처리한다") {
                 tokenRepository.load() should beInstanceOf<Failure>()
@@ -167,13 +191,13 @@ class TokenRepositoryTest: FunSpec({
 
             context("토큰이 유효하지 않아 로드가 실패했음을 알린다") {
                 test("액세스 토큰이 유효하지 않아 로드가 실패했음을 알린다") {
-                    val result = FakeAccessTokenRepository.load() as Failure
+                    val result = fakeAccessTokenRepository.load() as Failure
 
                     result.message shouldBe INVALID_ACCESS_TOKEN
                 }
 
                 test("리프레시 토큰이 유효하지 않아 로드가 실패했음을 알린다") {
-                    val result = FakeRefreshTokenRepository.load() as Failure
+                    val result = fakeRefreshTokenRepository.load() as Failure
 
                     result.message shouldBe INVALID_REFRESH_TOKEN
                 }
@@ -181,9 +205,11 @@ class TokenRepositoryTest: FunSpec({
         }
 
         context("로드한 토큰이 유효하면") {
-            every { token.isValid() } returns true
+            val validToken = mockk<LoginToken> {
+                every { isValid() } returns true
+            }
 
-            coEvery { FakeTokenStorage.load() } returns token
+            coEvery { tokenRepository["loadFromStorage"]() } returns validToken
 
             test("로드를 성공 처리한다") {
                 tokenRepository.load() should beInstanceOf<Ok<Any>>()
@@ -192,7 +218,7 @@ class TokenRepositoryTest: FunSpec({
             test("성공 응답이 TokenStorage가 반환한 토큰을 포함한다") {
                 val result = tokenRepository.load() as Ok
 
-                result.body shouldBe token
+                result.body shouldBe validToken
             }
         }
     }
