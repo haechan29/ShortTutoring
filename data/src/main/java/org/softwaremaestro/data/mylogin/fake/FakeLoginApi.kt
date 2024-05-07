@@ -12,23 +12,14 @@ import org.softwaremaestro.domain.mylogin.entity.Request
 import org.softwaremaestro.domain.mylogin.entity.RequestDto
 import org.softwaremaestro.domain.mylogin.entity.Server
 
-object FakeMyLoginRepository: MyLoginRepository {
-    override suspend fun login(id: String, password: String): NetworkResult<Any> {
-        val dto = LoginRequestDto(id, password)
-        if (!dto.isValid()) {
-            return AccessTokenNotFound
-        }
+object FakeLoginApi: LoginApi {
+    override val server: Server = FakeServer
 
-        return FakeLoginApi.login()
+    override suspend fun login(): NetworkResult<Any> {
+        return Ok(Unit)
     }
 
-    override suspend fun autologin() {
-        when (val result = FakeAccessTokenRepository.load()) {
-            is Ok -> return
-            is Failure -> {
-                result.message // handle message
-                FakeRefreshTokenRepository.load()
-            }
-        }
+    override fun toRequest(dto: RequestDto): Request {
+        TODO("Not yet implemented")
     }
 }

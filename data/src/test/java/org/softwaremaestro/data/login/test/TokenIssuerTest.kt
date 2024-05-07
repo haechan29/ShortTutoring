@@ -5,21 +5,15 @@ import io.kotest.core.spec.style.FunSpec
 import io.kotest.matchers.shouldBe
 import io.mockk.coEvery
 import io.mockk.coVerify
-import io.mockk.every
 import io.mockk.mockk
 import io.mockk.mockkObject
 import io.mockk.spyk
 import io.mockk.unmockkAll
-import org.softwaremaestro.data.mylogin.fake.FakeAuthAccessTokenApi
-import org.softwaremaestro.data.mylogin.fake.FakeAuthRefreshTokenApi
+import org.softwaremaestro.data.mylogin.fake.FakeIssueAccessTokenApi
+import org.softwaremaestro.data.mylogin.fake.FakeIssueRefreshTokenApi
 import org.softwaremaestro.data.mylogin.fake.FakeTokenIssuer
-import org.softwaremaestro.domain.mylogin.entity.AccessTokenIsAuthenticated
 import org.softwaremaestro.domain.mylogin.entity.AccessTokenIsNotAuthenticated
-import org.softwaremaestro.domain.mylogin.entity.AuthFailure
-import org.softwaremaestro.domain.mylogin.entity.AuthResult.*
-import org.softwaremaestro.domain.mylogin.entity.AuthTokenApi
 import org.softwaremaestro.domain.mylogin.entity.Failure
-import org.softwaremaestro.domain.mylogin.entity.NetworkResult
 import org.softwaremaestro.domain.mylogin.entity.RefreshTokenIsNotAuthenticated
 
 class TokenIssuerTest: FunSpec({
@@ -27,8 +21,8 @@ class TokenIssuerTest: FunSpec({
 
     beforeEach { unmockkAll() }
 
-    mockkObject(FakeAuthAccessTokenApi)
-    mockkObject(FakeAuthRefreshTokenApi)
+    mockkObject(FakeIssueAccessTokenApi)
+    mockkObject(FakeIssueRefreshTokenApi)
 
     val tokenIssuer = spyk<FakeTokenIssuer>(recordPrivateCalls = true)
 
@@ -43,11 +37,11 @@ class TokenIssuerTest: FunSpec({
         }
 
         test("액세스 토큰 발급 API를 호출한다") {
-            coVerify { FakeAuthAccessTokenApi.authToken() }
+            coVerify { FakeIssueAccessTokenApi.issueToken() }
         }
 
         test("API가 반환한 응답을 반환한다") {
-            result shouldBe FakeAuthAccessTokenApi.authToken()
+            result shouldBe FakeIssueAccessTokenApi.issueToken()
         }
     }
 
@@ -59,11 +53,11 @@ class TokenIssuerTest: FunSpec({
         }
 
         test("리프레시 토큰 발급 API를 호출한다") {
-            coVerify { FakeAuthRefreshTokenApi.authToken() }
+            coVerify { FakeIssueRefreshTokenApi.issueToken() }
         }
 
         test("API가 반환한 응답을 반환한다") {
-            result shouldBe FakeAuthRefreshTokenApi.authToken()
+            result shouldBe FakeIssueRefreshTokenApi.issueToken()
         }
     }
 

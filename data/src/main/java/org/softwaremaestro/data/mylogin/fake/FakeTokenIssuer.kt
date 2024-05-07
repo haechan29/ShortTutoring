@@ -1,13 +1,9 @@
 package org.softwaremaestro.data.mylogin.fake
 
 import org.softwaremaestro.domain.mylogin.entity.AccessTokenIsNotAuthenticated
-import org.softwaremaestro.domain.mylogin.entity.AccessTokenNotFound
 import org.softwaremaestro.domain.mylogin.entity.AuthFailure
-import org.softwaremaestro.domain.mylogin.entity.AuthOk
-import org.softwaremaestro.domain.mylogin.entity.AuthTokenApi
 import org.softwaremaestro.domain.mylogin.entity.Failure
 import org.softwaremaestro.domain.mylogin.entity.NetworkResult
-import org.softwaremaestro.domain.mylogin.entity.Ok
 import org.softwaremaestro.domain.mylogin.entity.RefreshTokenIsNotAuthenticated
 import org.softwaremaestro.domain.mylogin.entity.TokenIssuer
 
@@ -20,11 +16,11 @@ abstract class FakeTokenIssuer: TokenIssuer {
     }
 
     private suspend fun issueAccessToken(): NetworkResult<Any> {
-        return FakeAuthAccessTokenApi.authToken()
+        return FakeIssueAccessTokenApi.issueToken()
     }
 
     private suspend fun issueAccessAndRefreshToken(): NetworkResult<Any> {
-        return FakeAuthRefreshTokenApi.authToken()
+        return FakeIssueRefreshTokenApi.issueToken()
     }
 
     private suspend fun tryOrNull(attemptLimit: Int, f: suspend () -> NetworkResult<Any>): NetworkResult<Any> {

@@ -20,24 +20,8 @@ class LoginRepositoryTest2: FunSpec({
     }
 
     xcontext("응답을 처리한다") {
-        context("액세스 토큰 인증을 시도했을 때 응답을 처리한다") {
-            test("액세스 토큰이 유효하다는 응답을 받으면 InvalidAccessTokenException을 발생시키지 않는다")
-
-            test("액세스 토큰이 유효하지 않다는 응답을 받으면 InvalidAccessTokenException을 발생시킨다")
-        }
-
-        context("리프레시 토큰 인증을 시도했을 때 응답을 처리한다") {
-            test("리프레시 토큰이 유효하다는 응답을 받으면 InvalidRefreshTokenException을 발생시키지 않는다")
-
-            test("리프레시 토큰이 유효하다는 응답을 받으면 응답 바디는 액세스 토큰을 포함한다")
-
-            test("리프레시 토큰이 유효하다는 응답을 받으면 액세스 토큰을 저장한다")
-
-            test("리프레시 토큰이 유효하지 않다는 응답을 받으면 InvalidRefreshTokenException을 발생시킨다")
-        }
-
-        context("사용자 인증을 시도했을 때 응답을 처리한다") {
-            test("사용자 인증이 실패하면 UnauthorizedUserException을 발생시킨다")
+        context("사용자 인증 응답을 처리한다") {
+            test("사용자 인증이 실패하면 사용자에게 알린다")
 
             test("사용자 인증에 성공하면 응답 바디는 역할(학생, 선생님)을 포함한다")
 
@@ -47,24 +31,8 @@ class LoginRepositoryTest2: FunSpec({
 
             test("학생 회원이 사용자 인증에 성공하면 학생 홈 화면으로 이동한다")
 
-            test("학생 회원이 사용자 인증에 성공했을 때만 학생 홈 화면으로 이동한다")
-
             test("선생님 회원이 사용자 인증에 성공하면 선생님 홈 화면으로 이동한다")
-
-            test("선생님 회원이 사용자 인증에 성공했을 때만 선생님 홈 화면으로 이동한다")
         }
-    }
-
-    xcontext("토큰이 재발급되면 로그인을 시도한다") {
-        test("액세스 토큰이 재발급되면 로그인을 시도한다")
-
-        test("리프레시 토큰이 재발급되면 로그인을 시도한다")
-
-        test("토큰이 빠른 시간 안에 반복적으로 발급되어도 로그인을 여러 번 시도하지 않는다")
-
-        test("InvalidRefreshTokenException이 발생하면 사용자 로그인을 시작한다")
-
-        test("UnauthorizedUserException이 발생하면 로그인이 실패했음을 알린다")
     }
 
     xcontext("동시적인 토큰 발급 요청을 처리한다") {

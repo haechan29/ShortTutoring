@@ -197,5 +197,7 @@ class TokenRepositoryTest: FunSpec({
         }
     }
 
+    context("유효한 토큰을 불러온다")
+
     afterEach { unmockkAll() }
 })
