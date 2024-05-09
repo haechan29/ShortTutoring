@@ -20,22 +20,6 @@ class LoginRepositoryTest2: FunSpec({
         every { mockTokenRepository } returns mockTokenRepository
     }
 
-    xcontext("응답을 처리한다") {
-        context("사용자 인증 응답을 처리한다") {
-            test("사용자 인증이 실패하면 사용자에게 알린다")
-
-            test("사용자 인증에 성공하면 응답 바디는 역할(학생, 선생님)을 포함한다")
-
-            test("사용자 인증에 성공하면 액세스 토큰을 저장한다")
-
-            test("사용자 인증에 성공하면 리프레시 토큰을 저장한다")
-
-            test("학생 회원이 사용자 인증에 성공하면 학생 홈 화면으로 이동한다")
-
-            test("선생님 회원이 사용자 인증에 성공하면 선생님 홈 화면으로 이동한다")
-        }
-    }
-
     xcontext("동시적인 토큰 발급 요청을 처리한다") {
         context("동시적인 액세스 토큰 발급 요청을 처리한다") {
             test("액세스 토큰은 짧은 시간 안에 반복적으로 발급되지 않는다")
