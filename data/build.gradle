@@ -95,4 +95,6 @@ dependencies {
     def mockkVersion = '1.13.10'
     testImplementation "io.mockk:mockk-android:${mockkVersion}"
     testImplementation "io.mockk:mockk-agent:${mockkVersion}"
+
+    testImplementation("org.junit.jupiter:junit-jupiter:5.7.0")
 }

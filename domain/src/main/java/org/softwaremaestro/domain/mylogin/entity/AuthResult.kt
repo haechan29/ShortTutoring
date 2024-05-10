@@ -1,8 +1,8 @@
 package org.softwaremaestro.domain.mylogin.entity
 
-interface AuthResult
-interface AuthOk: AuthResult
-sealed interface AuthFailure: AuthResult
+sealed interface AuthResult: Result
+interface AuthOk: AuthResult, Ok
+sealed interface AuthFailure: AuthResult, Failure
 
 object AccessTokenIsAuthenticated: AuthOk
 object AccessTokenIsNotAuthenticated: AuthFailure

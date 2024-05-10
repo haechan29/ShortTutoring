@@ -12,7 +12,7 @@ interface IssueTokenResponseDto: ResponseDto {
 }
 
 interface LocalTokenResponseDto: ResponseDto {
-    val token: LoginToken
+    val accessToken: LoginAccessToken
 }
 
 object EmptyResponseDto: ResponseDto

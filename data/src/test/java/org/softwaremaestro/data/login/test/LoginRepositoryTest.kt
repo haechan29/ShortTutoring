@@ -14,12 +14,12 @@ import io.mockk.unmockkAll
 import org.softwaremaestro.data.mylogin.dto.LoginRequestDto
 import org.softwaremaestro.data.mylogin.fake.FakeMyLoginRepository
 import org.softwaremaestro.domain.mylogin.entity.EmptyResponseDto
-import org.softwaremaestro.domain.mylogin.entity.Failure
+import org.softwaremaestro.domain.mylogin.entity.NetworkFailure
 import org.softwaremaestro.domain.mylogin.entity.InvalidLoginInfo
 import org.softwaremaestro.domain.mylogin.entity.LoginApi
 import org.softwaremaestro.domain.mylogin.entity.LoginResponseDto
 import org.softwaremaestro.domain.mylogin.entity.NetworkResult
-import org.softwaremaestro.domain.mylogin.entity.Ok
+import org.softwaremaestro.domain.mylogin.entity.NetworkOk
 import org.softwaremaestro.domain.mylogin.entity.Role
 
 class LoginRepositoryTest: FunSpec({
@@ -59,7 +59,7 @@ class LoginRepositoryTest: FunSpec({
             every { fakeMyLoginRepository["isValid"](ofType<LoginRequestDto>()) } returns true
 
             val failureMessage = "message"
-            val unsuccessfulResult = mockk<Failure>(relaxed = true) {
+            val unsuccessfulResult = mockk<NetworkFailure>(relaxed = true) {
                 every { message } returns failureMessage
             }
 
@@ -67,11 +67,11 @@ class LoginRepositoryTest: FunSpec({
 
             test("로그인을 실패 처리한다") {
                 val result = fakeMyLoginRepository.login("", "")
-                result should beInstanceOf<Failure>()
+                result should beInstanceOf<NetworkFailure>()
             }
 
             test("로그인 응답은 로그인이 실패한 이유를 포함한다") {
-                val result = fakeMyLoginRepository.login("", "") as Failure
+                val result = fakeMyLoginRepository.login("", "") as NetworkFailure
                 result.message shouldBe failureMessage
             }
 
@@ -89,7 +89,7 @@ class LoginRepositoryTest: FunSpec({
                         every { role } returns Role.STUDENT
                     }
 
-                    val successfulResult = mockk<Ok<LoginResponseDto>>(relaxed = true) {
+                    val successfulResult = mockk<NetworkOk<LoginResponseDto>>(relaxed = true) {
                         every { dto } returns studentDto
                     }
 
@@ -105,7 +105,7 @@ class LoginRepositoryTest: FunSpec({
                         every { role } returns Role.TEACHER
                     }
 
-                    val successfulResult = mockk<Ok<LoginResponseDto>>(relaxed = true) {
+                    val successfulResult = mockk<NetworkOk<LoginResponseDto>>(relaxed = true) {
                         every { dto } returns studentDto
                     }
 
@@ -129,7 +129,7 @@ class LoginRepositoryTest: FunSpec({
         }
 
         test("액세스 토큰 인증이 실패하면 리프레시 토큰 인증을 시작한다") {
-            coEvery { fakeMyLoginRepository["loadAccessToken"]() } returns spyk<Failure>()
+            coEvery { fakeMyLoginRepository["loadAccessToken"]() } returns spyk<NetworkFailure>()
 
             fakeMyLoginRepository.autologin()
 

@@ -6,21 +6,17 @@ import io.kotest.matchers.shouldBe
 import io.mockk.coEvery
 import io.mockk.coVerify
 import io.mockk.mockk
-import io.mockk.mockkObject
 import io.mockk.spyk
 import io.mockk.unmockkAll
-import org.softwaremaestro.data.mylogin.fake.FakeAccessTokenRepository
-import org.softwaremaestro.data.mylogin.fake.FakeRefreshTokenRepository
 import org.softwaremaestro.data.mylogin.fake.FakeTokenAuthenticator
 import org.softwaremaestro.domain.mylogin.TokenRepository
 import org.softwaremaestro.domain.mylogin.entity.AccessTokenIsAuthenticated
 import org.softwaremaestro.domain.mylogin.entity.AccessTokenIsNotAuthenticated
-import org.softwaremaestro.domain.mylogin.entity.Failure
+import org.softwaremaestro.domain.mylogin.entity.NetworkFailure
 import org.softwaremaestro.domain.mylogin.entity.LocalTokenResponseDto
 import org.softwaremaestro.domain.mylogin.entity.LoginAccessToken
 import org.softwaremaestro.domain.mylogin.entity.LoginRefreshToken
-import org.softwaremaestro.domain.mylogin.entity.LoginToken
-import org.softwaremaestro.domain.mylogin.entity.Ok
+import org.softwaremaestro.domain.mylogin.entity.NetworkOk
 import org.softwaremaestro.domain.mylogin.entity.RefreshTokenIsNotAuthenticated
 
 class TokenAuthenticatorTest: FunSpec({
@@ -44,23 +40,23 @@ class TokenAuthenticatorTest: FunSpec({
         }
 
         test("액세스 토큰이 검증을 통과하면 액세스 토큰이 검증되었다는 결과를 반환한다") {
-            coEvery { accessTokenRepository.load() } returns mockk<Ok<LocalTokenResponseDto>>()
+            coEvery { accessTokenRepository.load() } returns mockk<NetworkOk<LocalTokenResponseDto>>()
 
             tokenAuthenticator.authToken() shouldBe AccessTokenIsAuthenticated
         }
 
 
         context("액세스 토큰이 검증을 통과하지 못하면") {
-            coEvery { accessTokenRepository.load() } returns mockk<Failure>()
+            coEvery { accessTokenRepository.load() } returns mockk<NetworkFailure>()
 
-            test("못하면 리프레시 토큰을 검증한다") {
+            test("리프레시 토큰을 검증한다") {
                 tokenAuthenticator.authToken()
 
                 coVerify { refreshTokenRepository.load() }
             }
 
             context("리프레시 토큰이 검증을 통과하면") {
-                coEvery { refreshTokenRepository.load() } returns mockk<Ok<LocalTokenResponseDto>>()
+                coEvery { refreshTokenRepository.load() } returns mockk<NetworkOk<LocalTokenResponseDto>>()
 
                 test("액세스 토큰이 검증에 실패했다는 결과를 반환한다") {
                     val result = tokenAuthenticator.authToken()
@@ -70,7 +66,7 @@ class TokenAuthenticatorTest: FunSpec({
             }
 
             context("리프레시 토큰이 검증을 통과하지 못하면") {
-                coEvery { refreshTokenRepository.load() } returns mockk<Failure>()
+                coEvery { refreshTokenRepository.load() } returns mockk<NetworkFailure>()
 
                 test("리프레시 토큰이 검증에 실패했다는 결과를 반환한다") {
                     val result = tokenAuthenticator.authToken()

@@ -1,4 +1,4 @@
-package org.softwaremaestro.data.login.login_repository
+package org.softwaremaestro.data.login.test
 
 import io.kotest.core.spec.IsolationMode
 import io.kotest.core.spec.style.FunSpec
@@ -16,17 +16,17 @@ import org.softwaremaestro.data.mylogin.fake.FakeAccessTokenRepository
 import org.softwaremaestro.data.mylogin.fake.FakeRefreshTokenRepository
 import org.softwaremaestro.data.mylogin.fake.FakeTokenRepository
 import org.softwaremaestro.domain.mylogin.entity.EmptyResponseDto
-import org.softwaremaestro.domain.mylogin.entity.Failure
-import org.softwaremaestro.domain.mylogin.entity.Failure.Companion.ACCESS_TOKEN_NOT_FOUND
-import org.softwaremaestro.domain.mylogin.entity.Failure.Companion.INVALID_ACCESS_TOKEN
-import org.softwaremaestro.domain.mylogin.entity.Failure.Companion.INVALID_REFRESH_TOKEN
-import org.softwaremaestro.domain.mylogin.entity.Failure.Companion.REFRESH_TOKEN_NOT_FOUND
+import org.softwaremaestro.domain.mylogin.entity.NetworkFailure
+import org.softwaremaestro.domain.mylogin.entity.NetworkFailure.Companion.ACCESS_TOKEN_NOT_FOUND
+import org.softwaremaestro.domain.mylogin.entity.NetworkFailure.Companion.INVALID_ACCESS_TOKEN
+import org.softwaremaestro.domain.mylogin.entity.NetworkFailure.Companion.INVALID_REFRESH_TOKEN
+import org.softwaremaestro.domain.mylogin.entity.NetworkFailure.Companion.REFRESH_TOKEN_NOT_FOUND
 import org.softwaremaestro.domain.mylogin.entity.InvalidToken
 import org.softwaremaestro.domain.mylogin.entity.LocalTokenResponseDto
 import org.softwaremaestro.domain.mylogin.entity.LoginAccessToken
 import org.softwaremaestro.domain.mylogin.entity.LoginRefreshToken
 import org.softwaremaestro.domain.mylogin.entity.LoginToken
-import org.softwaremaestro.domain.mylogin.entity.Ok
+import org.softwaremaestro.domain.mylogin.entity.NetworkOk
 import org.softwaremaestro.domain.mylogin.entity.TokenNotFound
 import org.softwaremaestro.domain.mylogin.entity.TokenStorage
 import org.softwaremaestro.domain.mylogin.entity.UserIdentifier
@@ -80,7 +80,7 @@ class TokenRepositoryTest: FunSpec({
         }
 
         test("저장을 실패 처리한다") {
-            result should beInstanceOf<Failure>()
+            result should beInstanceOf<NetworkFailure>()
         }
     }
 
@@ -90,7 +90,7 @@ class TokenRepositoryTest: FunSpec({
         val result = accessTokenRepository.save(mockk<LoginAccessToken>(relaxed = true))
 
         test("액세스 토큰이 유효하지 않아서 저장이 실패했음을 알린다") {
-            (result as Failure).message shouldBe INVALID_ACCESS_TOKEN
+            (result as NetworkFailure).message shouldBe INVALID_ACCESS_TOKEN
         }
     }
 
@@ -100,7 +100,7 @@ class TokenRepositoryTest: FunSpec({
         val result = refreshTokenRepository.save(mockk<LoginRefreshToken>(relaxed = true))
 
         test("리프레시 토큰이 유효하지 않아서 저장이 실패했음을 알린다") {
-            (result as Failure).message shouldBe INVALID_REFRESH_TOKEN
+            (result as NetworkFailure).message shouldBe INVALID_REFRESH_TOKEN
         }
     }
 
@@ -114,7 +114,7 @@ class TokenRepositoryTest: FunSpec({
         }
 
         test("저장을 성공 처리한다") {
-            result should beInstanceOf<Ok<EmptyResponseDto>>()
+            result should beInstanceOf<NetworkOk<EmptyResponseDto>>()
         }
     }
 
@@ -122,7 +122,7 @@ class TokenRepositoryTest: FunSpec({
         coEvery { tokenRepository["loadFromStorage"]() } returns null
 
         test("로드를 실패 처리한다") {
-            tokenRepository.load() should beInstanceOf<Failure>()
+            tokenRepository.load() should beInstanceOf<NetworkFailure>()
         }
     }
 
@@ -132,7 +132,7 @@ class TokenRepositoryTest: FunSpec({
         val result = accessTokenRepository.load()
 
         test("액세스 토큰이 존재하지 않아 로드가 실패했음을 알린다") {
-            (result as Failure).message shouldBe ACCESS_TOKEN_NOT_FOUND
+            (result as NetworkFailure).message shouldBe ACCESS_TOKEN_NOT_FOUND
         }
     }
 
@@ -142,7 +142,7 @@ class TokenRepositoryTest: FunSpec({
         val result = refreshTokenRepository.load()
 
         test("리프레시 토큰이 존재하지 않아 로드가 실패했음을 알린다") {
-            (result as Failure).message shouldBe REFRESH_TOKEN_NOT_FOUND
+            (result as NetworkFailure).message shouldBe REFRESH_TOKEN_NOT_FOUND
         }
     }
 
@@ -162,7 +162,7 @@ class TokenRepositoryTest: FunSpec({
         val result = tokenRepository.load()
 
         test("로드를 실패 처리한다") {
-            result should beInstanceOf<Failure>()
+            result should beInstanceOf<NetworkFailure>()
         }
     }
 
@@ -172,7 +172,7 @@ class TokenRepositoryTest: FunSpec({
         val result = tokenRepository.load()
 
         test("로드를 성공 처리한다") {
-            result should beInstanceOf<Ok<LocalTokenResponseDto>>()
+            result should beInstanceOf<NetworkOk<LocalTokenResponseDto>>()
         }
     }
 

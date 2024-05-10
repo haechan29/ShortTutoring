@@ -1,7 +1,7 @@
 package org.softwaremaestro.domain.mylogin.entity
 
-sealed class NetworkResult<out Dto: ResponseDto>
-abstract class Failure: NetworkResult<Nothing>() {
+sealed class NetworkResult<out Dto: ResponseDto>: Result
+abstract class NetworkFailure: NetworkResult<Nothing>(), Failure {
     abstract val message: String
 
     companion object {
@@ -14,15 +14,15 @@ abstract class Failure: NetworkResult<Nothing>() {
     }
 }
 
-object InvalidLoginInfo: Failure() { override val message = INVALID_LOGIN_INFO }
-object NotIdentifiedUser: Failure() { override val message = NOT_IDENTIFIED_USER }
+object InvalidLoginInfo: NetworkFailure() { override val message = INVALID_LOGIN_INFO }
+object NotIdentifiedUser: NetworkFailure() { override val message = NOT_IDENTIFIED_USER }
 
-sealed class TokenNotFound  : Failure()
+sealed class TokenNotFound  : NetworkFailure()
 object AccessTokenNotFound  : TokenNotFound() { override val message = ACCESS_TOKEN_NOT_FOUND }
 object RefreshTokenNotFound : TokenNotFound() { override val message = REFRESH_TOKEN_NOT_FOUND }
 
-sealed class InvalidToken   : Failure()
+sealed class InvalidToken   : NetworkFailure()
 object InvalidAccessToken   : InvalidToken() { override val message = INVALID_ACCESS_TOKEN }
 object InvalidRefreshToken  : InvalidToken() { override val message = INVALID_REFRESH_TOKEN }
 
-data class Ok<out Dto: ResponseDto>(val dto: Dto): NetworkResult<Dto>()
+data class NetworkOk<out Dto: ResponseDto>(val dto: Dto): NetworkResult<Dto>(), Ok

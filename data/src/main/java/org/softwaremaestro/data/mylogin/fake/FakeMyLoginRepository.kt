@@ -3,13 +3,11 @@ package org.softwaremaestro.data.mylogin.fake
 import org.softwaremaestro.data.mylogin.dto.LoginRequestDto
 import org.softwaremaestro.domain.mylogin.MyLoginRepository
 import org.softwaremaestro.domain.mylogin.entity.EmptyResponseDto
-import org.softwaremaestro.domain.mylogin.entity.ResponseDto
-import org.softwaremaestro.domain.mylogin.entity.Failure
+import org.softwaremaestro.domain.mylogin.entity.NetworkFailure
 import org.softwaremaestro.domain.mylogin.entity.InvalidLoginInfo
 import org.softwaremaestro.domain.mylogin.entity.NetworkResult
 import org.softwaremaestro.domain.mylogin.entity.LoginApi
-import org.softwaremaestro.domain.mylogin.entity.LoginResponseDto
-import org.softwaremaestro.domain.mylogin.entity.Ok
+import org.softwaremaestro.domain.mylogin.entity.NetworkOk
 
 abstract class FakeMyLoginRepository(private val api: LoginApi): MyLoginRepository {
     override suspend fun login(id: String, password: String): NetworkResult<EmptyResponseDto> {
@@ -17,8 +15,8 @@ abstract class FakeMyLoginRepository(private val api: LoginApi): MyLoginReposito
         if (!isValid(dto)) return InvalidLoginInfo
 
         return when (val result = api.sendRequest(dto)) {
-            is Ok -> Ok(EmptyResponseDto)
-            is Failure -> result
+            is NetworkOk -> NetworkOk(EmptyResponseDto)
+            is NetworkFailure -> result
         }
     }
 
