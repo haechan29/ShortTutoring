@@ -18,6 +18,7 @@ import org.softwaremaestro.domain.mylogin.entity.ResponseDto
 import org.softwaremaestro.domain.mylogin.entity.Failure
 import org.softwaremaestro.domain.mylogin.entity.InvalidLoginInfo
 import org.softwaremaestro.domain.mylogin.entity.IssueTokenApi
+import org.softwaremaestro.domain.mylogin.entity.IssueTokenResponseDto
 import org.softwaremaestro.domain.mylogin.entity.LoginToken
 import org.softwaremaestro.domain.mylogin.entity.NetworkResult
 import org.softwaremaestro.domain.mylogin.entity.Ok
@@ -37,8 +38,8 @@ class TokenIssuerTest: FunSpec({
             return mockk<LoginRequestDto>(relaxed = true)
         }
 
-        override suspend fun sendRequest(dto: LoginRequestDto): NetworkResult<ResponseDto> {
-            return mockk<NetworkResult<ResponseDto>>(relaxed = true)
+        override suspend fun sendRequest(dto: LoginRequestDto): NetworkResult<IssueTokenResponseDto> {
+            return mockk<NetworkResult<IssueTokenResponseDto>>(relaxed = true)
         }
 
         override fun getTokens(body: ResponseDto): List<LoginToken> {
@@ -51,8 +52,8 @@ class TokenIssuerTest: FunSpec({
     context("API가 토큰 발급 성공 응답을 반환하면") {
         coEvery { tokenIssuer["getLoginRequestDto"]() } returns mockk<LoginRequestDto>()
 
-        val mockOk = mockk<Ok<Any>>(relaxed = true) {
-            every { body } returns mockk<ResponseDto>(relaxed = true)
+        val mockOk = mockk<Ok<IssueTokenResponseDto>>(relaxed = true) {
+            every { dto } returns mockk<IssueTokenResponseDto>(relaxed = true)
         }
         coEvery { tokenIssuer["sendRequest"](ofType<LoginRequestDto>()) } returns mockOk
 
@@ -98,8 +99,8 @@ class TokenIssuerTest: FunSpec({
     context("토큰 발급을 재요청했을 때 성공 응답을 받으면") {
         coEvery { tokenIssuer["getLoginRequestDto"]() } returns mockk<LoginRequestDto>()
 
-        coEvery { tokenIssuer["sendRequest"](ofType<LoginRequestDto>()) } returns mockk<Ok<Any>> {
-            every { body } returns mockk<ResponseDto>(relaxed = true)
+        coEvery { tokenIssuer["sendRequest"](ofType<LoginRequestDto>()) } returns mockk<Ok<IssueTokenResponseDto>> {
+            every { dto } returns mockk<IssueTokenResponseDto>(relaxed = true)
         }
 
         val nonEmptyTokens = listOf(mockk<LoginToken>())
@@ -107,7 +108,7 @@ class TokenIssuerTest: FunSpec({
 
         test("토큰 발급을 성공 처리한다") {
             val result = tokenIssuer.issueToken()
-            result should beInstanceOf<Ok<Any>>()
+            result should beInstanceOf<Ok<IssueTokenResponseDto>>()
         }
     }
 

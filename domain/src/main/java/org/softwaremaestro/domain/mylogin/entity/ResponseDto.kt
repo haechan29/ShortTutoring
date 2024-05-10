@@ -10,3 +10,9 @@ interface IssueTokenResponseDto: ResponseDto {
     val accessToken: LoginAccessToken?
     val refreshToken: LoginRefreshToken?
 }
+
+interface LocalTokenResponseDto: ResponseDto {
+    val token: LoginToken
+}
+
+object EmptyResponseDto: ResponseDto

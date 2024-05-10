@@ -6,10 +6,11 @@ import org.softwaremaestro.domain.mylogin.entity.NetworkResult
 import org.softwaremaestro.domain.mylogin.entity.Ok
 import org.softwaremaestro.domain.mylogin.entity.Request
 import org.softwaremaestro.domain.mylogin.entity.RequestDto
+import org.softwaremaestro.domain.mylogin.entity.ResponseDto
 import org.softwaremaestro.domain.mylogin.entity.Server
 
 object FakeServer: Server {
-    override suspend fun send(request: Request): NetworkResult<Any> {
+    override suspend fun send(request: Request): NetworkResult<ResponseDto> {
         TODO("Not yet implemented")
     }
 }

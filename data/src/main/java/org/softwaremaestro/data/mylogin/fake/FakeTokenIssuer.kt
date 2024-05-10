@@ -2,10 +2,12 @@ package org.softwaremaestro.data.mylogin.fake
 
 import org.softwaremaestro.data.mylogin.dto.LoginRequestDto
 import org.softwaremaestro.domain.mylogin.entity.AccessTokenNotFound
+import org.softwaremaestro.domain.mylogin.entity.EmptyResponseDto
 import org.softwaremaestro.domain.mylogin.entity.ResponseDto
 import org.softwaremaestro.domain.mylogin.entity.Failure
 import org.softwaremaestro.domain.mylogin.entity.InvalidLoginInfo
 import org.softwaremaestro.domain.mylogin.entity.IssueTokenApi
+import org.softwaremaestro.domain.mylogin.entity.IssueTokenResponseDto
 import org.softwaremaestro.domain.mylogin.entity.LoginAccessToken
 import org.softwaremaestro.domain.mylogin.entity.LoginRefreshToken
 import org.softwaremaestro.domain.mylogin.entity.LoginToken
@@ -19,7 +21,7 @@ abstract class FakeTokenIssuer<Token: LoginToken>(
     private val api: IssueTokenApi,
     private val tokenNotFound: TokenNotFound
 ): TokenIssuer {
-    override suspend fun issueToken(): NetworkResult<Any> {
+    override suspend fun issueToken(): NetworkResult<EmptyResponseDto> {
         val dto = getLoginRequestDto()
         var result = sendRequest(dto)
 
@@ -27,25 +29,26 @@ abstract class FakeTokenIssuer<Token: LoginToken>(
 
         return attemptUntil(3) {
             result = sendRequest(dto)
-            if (result is Ok<ResponseDto>) {
-                val body = (result as Ok<ResponseDto>).body
-                val tokens = getTokens(body).ifEmpty { return@attemptUntil tokenNotFound }
+            if (result is Failure) return@attemptUntil result as Failure
 
-                tokens.forEach { token ->
-                    saveToken(token)
-                }
+            val body = (result as Ok<ResponseDto>).dto
+            val tokens = getTokens(body).ifEmpty { return@attemptUntil tokenNotFound }
+
+            tokens.forEach { token ->
+                saveToken(token)
             }
 
-            result
+            Ok(EmptyResponseDto)
         }
     }
 
     protected abstract suspend fun getLoginRequestDto(): LoginRequestDto
-    protected abstract suspend fun sendRequest(dto: LoginRequestDto): NetworkResult<ResponseDto>
+    protected abstract suspend fun sendRequest(dto: LoginRequestDto): NetworkResult<IssueTokenResponseDto>
     protected abstract fun getTokens(body: ResponseDto): List<Token>
     protected abstract suspend fun saveToken(token: Token)
 
-    private suspend fun attemptUntil(attemptLimit: Int, f: suspend () -> NetworkResult<Any>): NetworkResult<Any> {
+    private suspend fun attemptUntil(attemptLimit: Int, f: suspend () -> NetworkResult<EmptyResponseDto>)
+    : NetworkResult<EmptyResponseDto> {
         var attempt = 0
         var result = f()
         while (attempt < attemptLimit && result is Failure) {
