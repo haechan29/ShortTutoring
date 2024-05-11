@@ -14,7 +14,7 @@ import org.softwaremaestro.domain.mylogin.entity.LoginAccessToken
 import org.softwaremaestro.domain.mylogin.entity.LoginRefreshToken
 import org.softwaremaestro.domain.mylogin.entity.LoginToken
 import org.softwaremaestro.domain.mylogin.entity.NetworkResult
-import org.softwaremaestro.domain.mylogin.entity.NetworkOk
+import org.softwaremaestro.domain.mylogin.entity.NetworkSuccess
 import org.softwaremaestro.domain.mylogin.entity.RefreshTokenNotFound
 import org.softwaremaestro.domain.mylogin.entity.TokenIssuer
 import org.softwaremaestro.domain.mylogin.entity.TokenNotFound
@@ -34,21 +34,21 @@ abstract class FakeTokenIssuer<Token: LoginToken>(
             result = sendRequest(dto)
             if (result is NetworkFailure) return@attemptUntil result as NetworkFailure
 
-            val body = (result as NetworkOk<ResponseDto>).dto
+            val body = (result as NetworkSuccess<ResponseDto>).dto
             val tokens = getTokens(body).ifEmpty { return@attemptUntil tokenNotFound }
 
             tokens.forEach { token ->
                 saveToken(token)
             }
 
-            NetworkOk(EmptyResponseDto)
+            NetworkSuccess(EmptyResponseDto)
         }
     }
 
     private suspend fun getDtoOrNull(): IssueTokenRequestDto? {
         return when(val dtoResult = getDtoResult()) {
             is NetworkFailure -> return null
-            is NetworkOk -> toDto(dtoResult.dto)
+            is NetworkSuccess -> toDto(dtoResult.dto)
         }
     }
 

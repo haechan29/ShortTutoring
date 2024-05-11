@@ -1,4 +1,4 @@
-package org.softwaremaestro.data.login.testbed
+package org.softwaremaestro.data.login.test
 
 import io.kotest.core.spec.IsolationMode
 import io.kotest.core.spec.style.FunSpec
@@ -9,21 +9,20 @@ import io.mockk.coVerify
 import io.mockk.mockk
 import io.mockk.spyk
 import io.mockk.unmockkAll
+import kotlinx.coroutines.delay
 import kotlinx.coroutines.launch
 import kotlinx.coroutines.test.runTest
-import org.softwaremaestro.data.mylogin.SyncQueue
+import org.softwaremaestro.data.mylogin.Util.SyncQueue
 import org.softwaremaestro.data.mylogin.fake.FakeTokenInjector
 import org.softwaremaestro.domain.mylogin.TokenRepository
 import org.softwaremaestro.domain.mylogin.entity.AccessTokenIsNotAuthenticated
-import org.softwaremaestro.domain.mylogin.entity.AuthFailure
-import org.softwaremaestro.domain.mylogin.entity.AuthOk
+import org.softwaremaestro.domain.mylogin.entity.Authentication
 import org.softwaremaestro.domain.mylogin.entity.EmptyResponseDto
-import org.softwaremaestro.domain.mylogin.entity.LocalTokenResponseDto
+import org.softwaremaestro.domain.mylogin.entity.Failure
 import org.softwaremaestro.domain.mylogin.entity.LoginAccessToken
 import org.softwaremaestro.domain.mylogin.entity.NetworkFailure
-import org.softwaremaestro.domain.mylogin.entity.LoginToken
-import org.softwaremaestro.domain.mylogin.entity.NetworkOk
 import org.softwaremaestro.domain.mylogin.entity.NetworkResult
+import org.softwaremaestro.domain.mylogin.entity.Success
 import org.softwaremaestro.domain.mylogin.entity.RefreshTokenIsNotAuthenticated
 import org.softwaremaestro.domain.mylogin.entity.Request
 import org.softwaremaestro.domain.mylogin.entity.TokenAuthenticator
@@ -41,7 +40,7 @@ class TokenInjectorTest: FunSpec({
         object: FakeTokenInjector(tokenAuthenticator, syncQueue, accessTokenRepository) {},
         recordPrivateCalls = true
     ) {
-        coEvery { this@spyk["authenticateToken"]() } returns mockk<AuthOk>(relaxed = true)
+        coEvery { this@spyk["authenticateToken"]() } returns mockk<Success<Authentication>>(relaxed = true)
         coEvery { this@spyk["issueAccessToken"]() } returns mockk<NetworkResult<EmptyResponseDto>>(relaxed = true)
         coEvery { this@spyk["issueRefreshToken"]() } returns mockk<NetworkResult<EmptyResponseDto>>(relaxed = true)
         coEvery { this@spyk["addTokenToRequestHeader"](ofType<LoginAccessToken>()) } returns mockk<NetworkResult<EmptyResponseDto>>(relaxed = true)
@@ -78,7 +77,11 @@ class TokenInjectorTest: FunSpec({
     }
 
     context("토큰 발급이 진행되고 있다면") {
-        coEvery { tokenInjector["authenticateToken"]() } returns mockk<AuthFailure>(relaxed = true)
+        coEvery { tokenInjector["authenticateToken"]() } returns mockk<Failure<Authentication>>(relaxed = true)
+        coEvery { tokenInjector["issueTokenFromServer"](ofType<Failure<Authentication>>()) } coAnswers {
+            delay(100)
+            mockk<NetworkResult<EmptyResponseDto>>(relaxed = true)
+        }
 
         val results = mutableListOf<NetworkResult<EmptyResponseDto>>()
 
@@ -92,7 +95,7 @@ class TokenInjectorTest: FunSpec({
         }
 
         test("토큰 발급을 재시작하지 않는다") {
-            coVerify(exactly = 1) { tokenInjector["issueTokenFromServer"](ofType<AuthFailure>()) }
+            coVerify(exactly = 1) { tokenInjector["issueTokenFromServer"](ofType<Failure<Authentication>>()) }
         }
     }
 

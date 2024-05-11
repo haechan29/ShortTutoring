@@ -1,4 +1,4 @@
-package org.softwaremaestro.data.mylogin
+package org.softwaremaestro.data.mylogin.Util
 
 import kotlinx.coroutines.sync.Mutex
 import kotlinx.coroutines.sync.withLock

@@ -27,7 +27,7 @@ import org.softwaremaestro.domain.mylogin.entity.LoginAccessToken
 import org.softwaremaestro.domain.mylogin.entity.LoginRefreshToken
 import org.softwaremaestro.domain.mylogin.entity.LoginToken
 import org.softwaremaestro.domain.mylogin.entity.NetworkResult
-import org.softwaremaestro.domain.mylogin.entity.NetworkOk
+import org.softwaremaestro.domain.mylogin.entity.NetworkSuccess
 import org.softwaremaestro.domain.mylogin.entity.TokenNotFound
 
 class TokenIssuerTest: FunSpec({
@@ -46,7 +46,7 @@ class TokenIssuerTest: FunSpec({
     }, recordPrivateCalls = true) {
         every { this@spyk["getTokens"](ofType<ResponseDto>()) } returns listOf(mockk<LoginToken>())
         every { this@spyk["toDto"](ofType<LocalTokenResponseDto>()) } returns mockk<IssueTokenRequestDto>(relaxed = true)
-        coEvery { this@spyk["sendRequest"](ofType<IssueTokenRequestDto>()) } returns NetworkOk(mockk<IssueTokenResponseDto>(relaxed = true))
+        coEvery { this@spyk["sendRequest"](ofType<IssueTokenRequestDto>()) } returns NetworkSuccess(mockk<IssueTokenResponseDto>(relaxed = true))
         coEvery { this@spyk["saveToken"](ofType<LoginToken>()) } returns mockk<LoginToken>(relaxed = true)
     }
 
@@ -55,16 +55,16 @@ class TokenIssuerTest: FunSpec({
             return listOf(mockk<LoginRefreshToken>())
         }
     }, recordPrivateCalls = true) {
-        coEvery { this@spyk["getLoginInfo"]() } returns NetworkOk(mockk<LocalTokenResponseDto>(relaxed = true))
+        coEvery { this@spyk["getLoginInfo"]() } returns NetworkSuccess(mockk<LocalTokenResponseDto>(relaxed = true))
         every { this@spyk["getTokens"](ofType<ResponseDto>()) } returns listOf(mockk<LoginToken>())
         every { this@spyk["toDto"](ofType<LocalTokenResponseDto>()) } returns mockk<IssueTokenRequestDto>(relaxed = true)
-        coEvery { this@spyk["sendRequest"](ofType<IssueTokenRequestDto>()) } returns NetworkOk(mockk<IssueTokenResponseDto>(relaxed = true))
+        coEvery { this@spyk["sendRequest"](ofType<IssueTokenRequestDto>()) } returns NetworkSuccess(mockk<IssueTokenResponseDto>(relaxed = true))
         coEvery { this@spyk["saveToken"](ofType<LoginToken>()) } returns mockk<LoginToken>(relaxed = true)
     }
 
     val tokenIssuer = spyk(object: FakeTokenIssuer<LoginToken>(api, tokenNotFound) {
         override suspend fun getDtoResult(): NetworkResult<LocalTokenResponseDto> {
-            return NetworkOk(mockk<LocalTokenResponseDto>(relaxed = true))
+            return NetworkSuccess(mockk<LocalTokenResponseDto>(relaxed = true))
         }
 
         override fun getTokens(body: ResponseDto): List<LoginToken> {
@@ -72,7 +72,7 @@ class TokenIssuerTest: FunSpec({
         }
     },recordPrivateCalls = true) {
         every { this@spyk["toDto"](ofType<LocalTokenResponseDto>()) } returns mockk<IssueTokenRequestDto>(relaxed = true)
-        coEvery { this@spyk["sendRequest"](ofType<IssueTokenRequestDto>()) } returns NetworkOk(mockk<IssueTokenResponseDto>(relaxed = true))
+        coEvery { this@spyk["sendRequest"](ofType<IssueTokenRequestDto>()) } returns NetworkSuccess(mockk<IssueTokenResponseDto>(relaxed = true))
         coEvery { this@spyk["saveToken"](ofType<LoginToken>()) } returns mockk<LoginToken>(relaxed = true)
     }
 
@@ -103,7 +103,7 @@ class TokenIssuerTest: FunSpec({
     }
 
     context("API가 토큰 발급 성공 응답을 반환하면") {
-        val mockOk = mockk<NetworkOk<IssueTokenResponseDto>>(relaxed = true)
+        val mockOk = mockk<NetworkSuccess<IssueTokenResponseDto>>(relaxed = true)
         coEvery { tokenIssuer["sendRequest"](ofType<IssueTokenRequestDto>()) } returns mockOk
 
         tokenIssuer.issueToken()
@@ -144,13 +144,13 @@ class TokenIssuerTest: FunSpec({
     }
 
     context("토큰 발급을 재요청했을 때 성공 응답을 받으면") {
-        val results = listOf(mockk<NetworkFailure>(relaxed = true), mockk<NetworkOk<IssueTokenResponseDto>>(relaxed = true))
+        val results = listOf(mockk<NetworkFailure>(relaxed = true), mockk<NetworkSuccess<IssueTokenResponseDto>>(relaxed = true))
         coEvery { tokenIssuer["sendRequest"](ofType<IssueTokenRequestDto>()) } returnsMany results
 
         val result = tokenIssuer.issueToken()
 
         test("토큰 발급을 성공 처리한다") {
-            result should beInstanceOf<NetworkOk<IssueTokenResponseDto>>()
+            result should beInstanceOf<NetworkSuccess<IssueTokenResponseDto>>()
         }
     }
 

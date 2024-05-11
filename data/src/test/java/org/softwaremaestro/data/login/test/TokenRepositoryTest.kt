@@ -16,17 +16,17 @@ import org.softwaremaestro.data.mylogin.fake.FakeAccessTokenRepository
 import org.softwaremaestro.data.mylogin.fake.FakeRefreshTokenRepository
 import org.softwaremaestro.data.mylogin.fake.FakeTokenRepository
 import org.softwaremaestro.domain.mylogin.entity.EmptyResponseDto
+import org.softwaremaestro.domain.mylogin.entity.Failure.Companion.ACCESS_TOKEN_NOT_FOUND
+import org.softwaremaestro.domain.mylogin.entity.Failure.Companion.INVALID_ACCESS_TOKEN
+import org.softwaremaestro.domain.mylogin.entity.Failure.Companion.INVALID_REFRESH_TOKEN
+import org.softwaremaestro.domain.mylogin.entity.Failure.Companion.REFRESH_TOKEN_NOT_FOUND
 import org.softwaremaestro.domain.mylogin.entity.NetworkFailure
-import org.softwaremaestro.domain.mylogin.entity.NetworkFailure.Companion.ACCESS_TOKEN_NOT_FOUND
-import org.softwaremaestro.domain.mylogin.entity.NetworkFailure.Companion.INVALID_ACCESS_TOKEN
-import org.softwaremaestro.domain.mylogin.entity.NetworkFailure.Companion.INVALID_REFRESH_TOKEN
-import org.softwaremaestro.domain.mylogin.entity.NetworkFailure.Companion.REFRESH_TOKEN_NOT_FOUND
 import org.softwaremaestro.domain.mylogin.entity.InvalidToken
 import org.softwaremaestro.domain.mylogin.entity.LocalTokenResponseDto
 import org.softwaremaestro.domain.mylogin.entity.LoginAccessToken
 import org.softwaremaestro.domain.mylogin.entity.LoginRefreshToken
 import org.softwaremaestro.domain.mylogin.entity.LoginToken
-import org.softwaremaestro.domain.mylogin.entity.NetworkOk
+import org.softwaremaestro.domain.mylogin.entity.NetworkSuccess
 import org.softwaremaestro.domain.mylogin.entity.TokenNotFound
 import org.softwaremaestro.domain.mylogin.entity.TokenStorage
 import org.softwaremaestro.domain.mylogin.entity.UserIdentifier
@@ -114,7 +114,7 @@ class TokenRepositoryTest: FunSpec({
         }
 
         test("저장을 성공 처리한다") {
-            result should beInstanceOf<NetworkOk<EmptyResponseDto>>()
+            result should beInstanceOf<NetworkSuccess<EmptyResponseDto>>()
         }
     }
 
@@ -172,7 +172,7 @@ class TokenRepositoryTest: FunSpec({
         val result = tokenRepository.load()
 
         test("로드를 성공 처리한다") {
-            result should beInstanceOf<NetworkOk<LocalTokenResponseDto>>()
+            result should beInstanceOf<NetworkSuccess<LocalTokenResponseDto>>()
         }
     }
 

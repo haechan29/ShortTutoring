@@ -16,7 +16,7 @@ import org.softwaremaestro.domain.mylogin.entity.NetworkFailure
 import org.softwaremaestro.domain.mylogin.entity.LocalTokenResponseDto
 import org.softwaremaestro.domain.mylogin.entity.LoginAccessToken
 import org.softwaremaestro.domain.mylogin.entity.LoginRefreshToken
-import org.softwaremaestro.domain.mylogin.entity.NetworkOk
+import org.softwaremaestro.domain.mylogin.entity.NetworkSuccess
 import org.softwaremaestro.domain.mylogin.entity.RefreshTokenIsNotAuthenticated
 
 class TokenAuthenticatorTest: FunSpec({
@@ -40,7 +40,7 @@ class TokenAuthenticatorTest: FunSpec({
         }
 
         test("액세스 토큰이 검증을 통과하면 액세스 토큰이 검증되었다는 결과를 반환한다") {
-            coEvery { accessTokenRepository.load() } returns mockk<NetworkOk<LocalTokenResponseDto>>()
+            coEvery { accessTokenRepository.load() } returns mockk<NetworkSuccess<LocalTokenResponseDto>>()
 
             tokenAuthenticator.authToken() shouldBe AccessTokenIsAuthenticated
         }
@@ -56,7 +56,7 @@ class TokenAuthenticatorTest: FunSpec({
             }
 
             context("리프레시 토큰이 검증을 통과하면") {
-                coEvery { refreshTokenRepository.load() } returns mockk<NetworkOk<LocalTokenResponseDto>>()
+                coEvery { refreshTokenRepository.load() } returns mockk<NetworkSuccess<LocalTokenResponseDto>>()
 
                 test("액세스 토큰이 검증에 실패했다는 결과를 반환한다") {
                     val result = tokenAuthenticator.authToken()

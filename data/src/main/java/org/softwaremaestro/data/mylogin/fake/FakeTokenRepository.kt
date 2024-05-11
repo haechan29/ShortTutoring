@@ -12,7 +12,7 @@ import org.softwaremaestro.domain.mylogin.entity.LoginRefreshToken
 import org.softwaremaestro.domain.mylogin.entity.NetworkResult
 import org.softwaremaestro.domain.mylogin.entity.LoginToken
 import org.softwaremaestro.domain.mylogin.entity.NotIdentifiedUser
-import org.softwaremaestro.domain.mylogin.entity.NetworkOk
+import org.softwaremaestro.domain.mylogin.entity.NetworkSuccess
 import org.softwaremaestro.domain.mylogin.entity.RefreshTokenNotFound
 import org.softwaremaestro.domain.mylogin.entity.TokenNotFound
 import org.softwaremaestro.domain.mylogin.entity.TokenStorage
@@ -32,14 +32,14 @@ abstract class FakeTokenRepository<Token: LoginToken>(
 
         saveToStorage(token)
 
-        return NetworkOk(EmptyResponseDto)
+        return NetworkSuccess(EmptyResponseDto)
     }
 
     override suspend fun load(): NetworkResult<LocalTokenResponseDto> {
         val token = loadFromStorage() ?: return tokenNotFoundFailure
         if (!isUserIdentified()) return notIdentifiedUser
         val dto = toDto(token)
-        return NetworkOk(dto)
+        return NetworkSuccess(dto)
     }
 
     private fun isValid(token: Validatable): Boolean {

@@ -19,7 +19,7 @@ import org.softwaremaestro.domain.mylogin.entity.InvalidLoginInfo
 import org.softwaremaestro.domain.mylogin.entity.LoginApi
 import org.softwaremaestro.domain.mylogin.entity.LoginResponseDto
 import org.softwaremaestro.domain.mylogin.entity.NetworkResult
-import org.softwaremaestro.domain.mylogin.entity.NetworkOk
+import org.softwaremaestro.domain.mylogin.entity.NetworkSuccess
 import org.softwaremaestro.domain.mylogin.entity.Role
 
 class LoginRepositoryTest: FunSpec({
@@ -89,7 +89,7 @@ class LoginRepositoryTest: FunSpec({
                         every { role } returns Role.STUDENT
                     }
 
-                    val successfulResult = mockk<NetworkOk<LoginResponseDto>>(relaxed = true) {
+                    val successfulResult = mockk<NetworkSuccess<LoginResponseDto>>(relaxed = true) {
                         every { dto } returns studentDto
                     }
 
@@ -105,7 +105,7 @@ class LoginRepositoryTest: FunSpec({
                         every { role } returns Role.TEACHER
                     }
 
-                    val successfulResult = mockk<NetworkOk<LoginResponseDto>>(relaxed = true) {
+                    val successfulResult = mockk<NetworkSuccess<LoginResponseDto>>(relaxed = true) {
                         every { dto } returns studentDto
                     }
 

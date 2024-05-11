@@ -1,21 +1,20 @@
 package org.softwaremaestro.data.mylogin.fake
 
 import kotlinx.coroutines.delay
-import org.softwaremaestro.data.mylogin.SyncQueue
+import org.softwaremaestro.data.mylogin.Util.SyncQueue
+import org.softwaremaestro.data.mylogin.Util.dtoOrNull
+import org.softwaremaestro.data.mylogin.Util.nullIfOk
 import org.softwaremaestro.domain.mylogin.TokenRepository
 import org.softwaremaestro.domain.mylogin.entity.AccessTokenIsNotAuthenticated
 import org.softwaremaestro.domain.mylogin.entity.AccessTokenNotFound
-import org.softwaremaestro.domain.mylogin.entity.AuthFailure
-import org.softwaremaestro.domain.mylogin.entity.AuthOk
-import org.softwaremaestro.domain.mylogin.entity.AuthResult
+import org.softwaremaestro.domain.mylogin.entity.Authentication
 import org.softwaremaestro.domain.mylogin.entity.EmptyResponseDto
 import org.softwaremaestro.domain.mylogin.entity.Failure
 import org.softwaremaestro.domain.mylogin.entity.LocalTokenResponseDto
 import org.softwaremaestro.domain.mylogin.entity.LoginAccessToken
+import org.softwaremaestro.domain.mylogin.entity.Result
 import org.softwaremaestro.domain.mylogin.entity.NetworkFailure
-import org.softwaremaestro.domain.mylogin.entity.LoginToken
 import org.softwaremaestro.domain.mylogin.entity.NetworkResult
-import org.softwaremaestro.domain.mylogin.entity.NetworkOk
 import org.softwaremaestro.domain.mylogin.entity.RefreshTokenIsNotAuthenticated
 import org.softwaremaestro.domain.mylogin.entity.Request
 import org.softwaremaestro.domain.mylogin.entity.TokenAuthenticator
@@ -42,33 +41,20 @@ abstract class FakeTokenInjector(
         return issueToken(authFailure).nullIfOk()
     }
 
-    private suspend fun authenticateToken(): AuthResult {
+    private suspend fun authenticateToken(): Result<Authentication> {
         return authenticator.authToken()
     }
 
-    private suspend fun issueToken(authFailure: AuthFailure): NetworkResult<EmptyResponseDto> {
+    private suspend fun issueToken(authFailure: Failure<Authentication>): NetworkResult<EmptyResponseDto> {
         return syncQueue.sync { issueTokenFromServer(authFailure) }
     }
 
-    private suspend fun issueTokenFromServer(authFailure: AuthFailure): NetworkResult<EmptyResponseDto> {
+    private suspend fun issueTokenFromServer(authFailure: Failure<Authentication>): NetworkResult<EmptyResponseDto> {
         delay(100)
         return when (authFailure) {
             is AccessTokenIsNotAuthenticated -> issueAccessToken()
             is RefreshTokenIsNotAuthenticated -> issueRefreshToken()
-        }
-    }
-
-    private fun AuthResult.nullIfOk(): AuthFailure? {
-        return when (this) {
-            is AuthOk -> null
-            is AuthFailure -> this
-        }
-    }
-
-    private fun NetworkResult<EmptyResponseDto>.nullIfOk(): NetworkFailure? {
-        return when (this) {
-            is NetworkOk<EmptyResponseDto> -> null
-            is NetworkFailure -> this
+            else -> throw Exception()
         }
     }
 
@@ -82,13 +68,6 @@ abstract class FakeTokenInjector(
 
     private suspend fun loadAccessToken(): NetworkResult<LocalTokenResponseDto> {
         return tokenRepository.load()
-    }
-
-    private fun NetworkResult<LocalTokenResponseDto>.dtoOrNull(): LocalTokenResponseDto? {
-        return when (this) {
-            is NetworkFailure -> null
-            is NetworkOk -> dto
-        }
     }
 
     private fun addTokenToRequestHeader(token: LoginAccessToken): NetworkResult<EmptyResponseDto> {

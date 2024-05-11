@@ -1,18 +1,17 @@
 package org.softwaremaestro.domain.mylogin.entity
 
-sealed class NetworkResult<out Dto: ResponseDto>: Result
-abstract class NetworkFailure: NetworkResult<Nothing>(), Failure {
-    abstract val message: String
+import org.softwaremaestro.domain.mylogin.entity.Failure.Companion.ACCESS_TOKEN_NOT_FOUND
+import org.softwaremaestro.domain.mylogin.entity.Failure.Companion.INVALID_ACCESS_TOKEN
+import org.softwaremaestro.domain.mylogin.entity.Failure.Companion.INVALID_LOGIN_INFO
+import org.softwaremaestro.domain.mylogin.entity.Failure.Companion.INVALID_REFRESH_TOKEN
+import org.softwaremaestro.domain.mylogin.entity.Failure.Companion.NOT_IDENTIFIED_USER
+import org.softwaremaestro.domain.mylogin.entity.Failure.Companion.REFRESH_TOKEN_NOT_FOUND
 
-    companion object {
-        const val INVALID_LOGIN_INFO      = "로그인 정보가 유효하지 않습니다"
-        const val NOT_IDENTIFIED_USER     = "식별되지 않은 사용자입니다"
-        const val ACCESS_TOKEN_NOT_FOUND  = "액세스 토큰이 존재하지 않습니다"
-        const val INVALID_ACCESS_TOKEN    = "액세스 토큰이 유효하지 않습니다"
-        const val REFRESH_TOKEN_NOT_FOUND = "리프레시 토큰이 존재하지 않습니다"
-        const val INVALID_REFRESH_TOKEN   = "리프레시 토큰이 유효하지 않습니다"
-    }
-}
+interface Network<out Dto: ResponseDto>
+
+sealed class NetworkResult<out Dto: ResponseDto>: Result<Network<Dto>>
+data class NetworkSuccess<out Dto: ResponseDto>(val dto: Dto): NetworkResult<Dto>(), Success<Network<Dto>>
+abstract class NetworkFailure: NetworkResult<Nothing>(), Failure<Network<Nothing>>
 
 object InvalidLoginInfo: NetworkFailure() { override val message = INVALID_LOGIN_INFO }
 object NotIdentifiedUser: NetworkFailure() { override val message = NOT_IDENTIFIED_USER }
@@ -24,5 +23,3 @@ object RefreshTokenNotFound : TokenNotFound() { override val message = REFRESH_T
 sealed class InvalidToken   : NetworkFailure()
 object InvalidAccessToken   : InvalidToken() { override val message = INVALID_ACCESS_TOKEN }
 object InvalidRefreshToken  : InvalidToken() { override val message = INVALID_REFRESH_TOKEN }
-
-data class NetworkOk<out Dto: ResponseDto>(val dto: Dto): NetworkResult<Dto>(), Ok
