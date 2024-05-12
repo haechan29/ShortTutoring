@@ -19,21 +19,30 @@ import org.softwaremaestro.domain.mylogin.entity.Authentication
 import org.softwaremaestro.domain.mylogin.entity.EmptyResponseDto
 import org.softwaremaestro.domain.mylogin.entity.Failure
 import org.softwaremaestro.domain.mylogin.entity.LoginAccessToken
+import org.softwaremaestro.domain.mylogin.entity.LoginRefreshToken
 import org.softwaremaestro.domain.mylogin.entity.NetworkFailure
 import org.softwaremaestro.domain.mylogin.entity.NetworkResult
 import org.softwaremaestro.domain.mylogin.entity.Success
 import org.softwaremaestro.domain.mylogin.entity.RefreshTokenIsNotAuthenticated
 import org.softwaremaestro.domain.mylogin.entity.Request
 import org.softwaremaestro.domain.mylogin.entity.TokenAuthenticator
+import org.softwaremaestro.domain.mylogin.entity.TokenIssuer
 
 class TokenInjectorTest: FunSpec({
     isolationMode = IsolationMode.InstancePerLeaf
 
     val tokenAuthenticator = mockk<TokenAuthenticator>(relaxed = true)
     val accessTokenRepository = mockk<TokenRepository<LoginAccessToken>>(relaxed = true)
+    val accessTokenIssuer = mockk<TokenIssuer<LoginAccessToken>>(relaxed = true)
+    val refreshTokenIssuer = mockk<TokenIssuer<LoginRefreshToken>>(relaxed = true)
 
     val tokenInjector = spyk(
-        objToCopy = object: FakeTokenInjector(tokenAuthenticator, accessTokenRepository) {},
+        objToCopy = object: FakeTokenInjector(
+            tokenAuthenticator,
+            accessTokenRepository,
+            accessTokenIssuer,
+            refreshTokenIssuer
+        ) {},
         recordPrivateCalls = true
     ) {
         coEvery { this@spyk["authenticateToken"]() } returns mockk<Success<Authentication>>(relaxed = true)

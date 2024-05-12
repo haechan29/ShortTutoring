@@ -1,8 +1,8 @@
 package org.softwaremaestro.domain.mylogin.entity
 
-sealed interface Result<out T>
-interface Success<out T>: Result<T>
-interface Failure<out T>: Result<T> {
+sealed interface Result<out Field>
+interface Success<out Field>: Result<Field>
+interface Failure<out Field>: Result<Field> {
     val message: String
 
     companion object {

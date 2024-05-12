@@ -10,15 +10,15 @@ import org.softwaremaestro.domain.mylogin.entity.Server
 abstract class FakeApi(private val server: Server): Api<ResponseDto> {
     override suspend fun sendRequest(dto: RequestDto): NetworkResult<ResponseDto> {
         val request = toRequest(dto)
-        addTokenToRequestHeader()
         return sendToServer(request)
     }
 
     // 분리
-    protected abstract fun toRequest(dto: RequestDto): Request
+    private fun toRequest(dto: RequestDto): Request {
+        TODO()
+    }
 
-    // 분리
-    abstract suspend fun addTokenToRequestHeader()
-
-    protected abstract suspend fun sendToServer(request: Request): NetworkResult<ResponseDto>
+    private suspend fun sendToServer(request: Request): NetworkResult<ResponseDto> {
+        return server.send(request)
+    }
 }

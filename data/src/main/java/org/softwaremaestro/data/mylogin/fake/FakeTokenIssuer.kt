@@ -23,7 +23,7 @@ import org.softwaremaestro.domain.mylogin.entity.TokenNotFound
 abstract class FakeTokenIssuer<Token: LoginToken>(
     private val api: IssueTokenApi,
     private val tokenNotFound: TokenNotFound<Token>
-): TokenIssuer {
+): TokenIssuer<Token> {
     final override suspend fun issueToken(): NetworkResult<EmptyResponseDto> {
         val dto = getDtoOrNull() ?: return tokenNotFound
 
@@ -92,6 +92,6 @@ abstract class FakeRefreshTokenIssuer(
     }
 
     private suspend fun getLoginInfo(): NetworkResult<LocalTokenResponseDto> {
-        TODO()
+        TODO("로그인")
     }
 }

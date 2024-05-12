@@ -10,6 +10,7 @@ import org.softwaremaestro.domain.mylogin.entity.Failure.Companion.REFRESH_TOKEN
 interface Network<out Dto: ResponseDto>
 
 sealed interface NetworkResult<out Dto: ResponseDto>: Result<Network<Dto>>
+
 data class NetworkSuccess<out Dto: ResponseDto>(val dto: Dto): NetworkResult<Dto>, Success<Network<Dto>>
 interface NetworkFailure: NetworkResult<Nothing>, Failure<Network<Nothing>>
 

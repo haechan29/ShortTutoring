@@ -5,6 +5,7 @@ import io.kotest.core.spec.style.FunSpec
 import io.kotest.matchers.shouldBe
 import io.mockk.coEvery
 import io.mockk.coVerify
+import io.mockk.every
 import io.mockk.mockk
 import io.mockk.spyk
 import io.mockk.unmockkAll
@@ -18,43 +19,30 @@ import org.softwaremaestro.domain.mylogin.entity.Server
 class ApiTest: FunSpec({
     isolationMode = IsolationMode.InstancePerLeaf
 
-    beforeEach { unmockkAll() }
+    val server = mockk<Server>(relaxed = true)
 
-    val api = spyk(object: FakeApi(mockk<Server>()) {
-        override fun toRequest(dto: RequestDto): Request {
-            return mockk<Request>()
-        }
+    val api = spyk(object: FakeApi(server) {}, recordPrivateCalls = true) {
+        every { this@spyk["toRequest"](ofType<RequestDto>()) } returns mockk<Request>(relaxed = true)
+        coEvery { this@spyk["sendToServer"](ofType<Request>()) } returns mockk<NetworkResult<ResponseDto>>(relaxed = true)
+    }
 
-        override suspend fun addTokenToRequestHeader() {}
-
-        override suspend fun sendToServer(request: Request): NetworkResult<ResponseDto> {
-            return mockk<NetworkResult<ResponseDto>>()
-        }
-    }, recordPrivateCalls = true)
-
-    context("요청을 전송할 때") {
-        test("토큰을 요청 헤더에 삽입한다") {
-            api.sendRequest(mockk<RequestDto>())
-
-            coVerify { api.addTokenToRequestHeader() }
-        }
+    context("API를 호출할 때") {
+        api.sendRequest(mockk<RequestDto>(relaxed = true))
 
         test("요청을 서버로 전송한다") {
-            api.sendRequest(mockk<RequestDto>())
-
             coVerify { api["sendToServer"](ofType<Request>()) }
-        }
-
-        test("서버가 반환한 응답을 반환한다") {
-            val serverResult = mockk<NetworkResult<ResponseDto>>()
-
-            coEvery { api["sendToServer"](ofType<Request>()) } returns serverResult
-
-            val result = api.sendRequest(mockk<RequestDto>())
-
-            result shouldBe serverResult
         }
     }
 
-    afterEach { unmockkAll() }
+    context("서버가 응답을 반환하면") {
+        val serverResult = mockk<NetworkResult<ResponseDto>>(relaxed = true)
+
+        coEvery { api["sendToServer"](ofType<Request>()) } returns serverResult
+
+        val result = api.sendRequest(mockk<RequestDto>(relaxed = true))
+
+        test("서버가 반환한 응답을 반환한다") {
+            result shouldBe serverResult
+        }
+    }
 })

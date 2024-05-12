@@ -12,70 +12,68 @@ import org.softwaremaestro.data.mylogin.fake.FakeTokenAuthenticator
 import org.softwaremaestro.domain.mylogin.TokenRepository
 import org.softwaremaestro.domain.mylogin.entity.AccessTokenIsAuthenticated
 import org.softwaremaestro.domain.mylogin.entity.AccessTokenIsNotAuthenticated
+import org.softwaremaestro.domain.mylogin.entity.EmptyResponseDto
 import org.softwaremaestro.domain.mylogin.entity.NetworkFailure
 import org.softwaremaestro.domain.mylogin.entity.LocalTokenResponseDto
 import org.softwaremaestro.domain.mylogin.entity.LoginAccessToken
 import org.softwaremaestro.domain.mylogin.entity.LoginRefreshToken
+import org.softwaremaestro.domain.mylogin.entity.NetworkResult
 import org.softwaremaestro.domain.mylogin.entity.NetworkSuccess
 import org.softwaremaestro.domain.mylogin.entity.RefreshTokenIsNotAuthenticated
 
 class TokenAuthenticatorTest: FunSpec({
     isolationMode = IsolationMode.InstancePerLeaf
 
-    beforeEach { unmockkAll() }
-
     val accessTokenRepository = mockk<TokenRepository<LoginAccessToken>>(relaxed = true)
     val refreshTokenRepository = mockk<TokenRepository<LoginRefreshToken>>(relaxed = true)
 
     val tokenAuthenticator = spyk(
-        object: FakeTokenAuthenticator(accessTokenRepository, refreshTokenRepository) {},
+        objToCopy = object: FakeTokenAuthenticator(accessTokenRepository, refreshTokenRepository) {},
         recordPrivateCalls = true
-    )
+    ) {
+        coEvery { this@spyk["loadAccessToken"]() } returns mockk<NetworkFailure>(relaxed = true)
+        coEvery { this@spyk["loadRefreshToken"]() } returns mockk<NetworkFailure>(relaxed = true)
+    }
 
-    context("액세스 토큰과 리프레시 토큰을 검증한다") {
-        test("액세스 토큰을 검증한다") {
-            tokenAuthenticator.authToken()
+    test("액세스 토큰을 검증한다") {
+        tokenAuthenticator.authToken()
 
-            coVerify { accessTokenRepository.load() }
-        }
+        coVerify { tokenAuthenticator["loadAccessToken"]() }
+    }
 
-        test("액세스 토큰이 검증을 통과하면 액세스 토큰이 검증되었다는 결과를 반환한다") {
-            coEvery { accessTokenRepository.load() } returns mockk<NetworkSuccess<LocalTokenResponseDto>>()
+    context("액세스 토큰이 검증을 통과하면") {
+        coEvery { tokenAuthenticator["loadAccessToken"]() } returns mockk<NetworkSuccess<LocalTokenResponseDto>>(relaxed = true)
 
-            tokenAuthenticator.authToken() shouldBe AccessTokenIsAuthenticated
-        }
+        val result = tokenAuthenticator.authToken()
 
-
-        context("액세스 토큰이 검증을 통과하지 못하면") {
-            coEvery { accessTokenRepository.load() } returns mockk<NetworkFailure>()
-
-            test("리프레시 토큰을 검증한다") {
-                tokenAuthenticator.authToken()
-
-                coVerify { refreshTokenRepository.load() }
-            }
-
-            context("리프레시 토큰이 검증을 통과하면") {
-                coEvery { refreshTokenRepository.load() } returns mockk<NetworkSuccess<LocalTokenResponseDto>>()
-
-                test("액세스 토큰이 검증에 실패했다는 결과를 반환한다") {
-                    val result = tokenAuthenticator.authToken()
-
-                    result shouldBe AccessTokenIsNotAuthenticated
-                }
-            }
-
-            context("리프레시 토큰이 검증을 통과하지 못하면") {
-                coEvery { refreshTokenRepository.load() } returns mockk<NetworkFailure>()
-
-                test("리프레시 토큰이 검증에 실패했다는 결과를 반환한다") {
-                    val result = tokenAuthenticator.authToken()
-
-                    result shouldBe RefreshTokenIsNotAuthenticated
-                }
-            }
+        test("액세스 토큰이 검증되었다는 결과를 반환한다") {
+            result shouldBe AccessTokenIsAuthenticated
         }
     }
 
-    afterEach { unmockkAll() }
+    context("액세스 토큰이 검증을 통과하지 못하면") {
+        tokenAuthenticator.authToken()
+
+        test("리프레시 토큰을 검증한다") {
+            coVerify { tokenAuthenticator["loadRefreshToken"]() }
+        }
+    }
+
+    context("리프레시 토큰이 검증을 통과하면") {
+        coEvery { tokenAuthenticator["loadRefreshToken"]() } returns mockk<NetworkSuccess<LocalTokenResponseDto>>()
+
+        val result = tokenAuthenticator.authToken()
+
+        test("액세스 토큰이 검증에 실패했다는 결과를 반환한다") {
+            result shouldBe AccessTokenIsNotAuthenticated
+        }
+    }
+
+    context("리프레시 토큰이 검증을 통과하지 못하면") {
+        val result = tokenAuthenticator.authToken()
+
+        test("리프레시 토큰이 검증에 실패했다는 결과를 반환한다") {
+            result shouldBe RefreshTokenIsNotAuthenticated
+        }
+    }
 })
