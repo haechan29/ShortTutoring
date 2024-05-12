@@ -37,7 +37,7 @@ class TokenIssuerTest: FunSpec({
 
     val accessTokenRepository = mockk<TokenRepository<LoginAccessToken>>(relaxed = true)
     val api = mockk<IssueTokenApi>(relaxed = true)
-    val tokenNotFound = mockk<TokenNotFound>(relaxed = true)
+    val tokenNotFound = mockk<TokenNotFound<LoginToken>>(relaxed = true)
 
     val accessTokenIssuer = spyk(object: FakeAccessTokenIssuer(accessTokenRepository, api) {
         override fun getTokens(body: ResponseDto): List<LoginAccessToken> {

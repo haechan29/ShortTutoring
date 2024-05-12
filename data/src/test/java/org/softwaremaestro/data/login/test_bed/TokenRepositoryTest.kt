@@ -1,4 +1,4 @@
-package org.softwaremaestro.data.login.test
+package org.softwaremaestro.data.login.test_bed
 
 import io.kotest.core.spec.IsolationMode
 import io.kotest.core.spec.style.FunSpec
@@ -35,14 +35,9 @@ import org.softwaremaestro.domain.mylogin.entity.Validatable
 class TokenRepositoryTest: FunSpec({
     isolationMode = IsolationMode.InstancePerLeaf
 
-    beforeEach { unmockkAll() }
-
     val accessTokenStorage = mockk<TokenStorage<LoginAccessToken>>(relaxed = true)
     val refreshTokenStorage = mockk<TokenStorage<LoginRefreshToken>>(relaxed = true)
-    val tokenStorage = mockk<TokenStorage<LoginToken>>(relaxed = true)
 
-    val tokenNotFoundFailure = mockk<TokenNotFound>(relaxed = true)
-    val invalidTokenFailure = mockk<InvalidToken>(relaxed = true)
     val userIdentifier = mockk<UserIdentifier>(relaxed = true)
 
     val accessTokenRepository = spyk(
@@ -53,15 +48,22 @@ class TokenRepositoryTest: FunSpec({
         object: FakeRefreshTokenRepository(refreshTokenStorage, userIdentifier) {}, recordPrivateCalls = true
     )
 
+    val tokenStorage = mockk<TokenStorage<LoginToken>>(relaxed = true)
+
+    val tokenNotFoundFailure = mockk<TokenNotFound<LoginToken>>(relaxed = true)
+    val invalidTokenFailure = mockk<InvalidToken<LoginToken>>(relaxed = true)
+
     val tokenRepository = spyk(
-        object: FakeTokenRepository<LoginToken>(tokenStorage, tokenNotFoundFailure, invalidTokenFailure, userIdentifier) {} , recordPrivateCalls = true
+        object: FakeTokenRepository<LoginToken>(tokenStorage, userIdentifier, tokenNotFoundFailure, invalidTokenFailure) {} , recordPrivateCalls = true
     ) {
-        every { this@spyk["isValid"](ofType<Validatable>()) } returns mockk<Boolean>(relaxed = true)
-        coEvery { this@spyk["saveToStorage"](ofType<LoginToken>()) } returns mockk<Boolean>(relaxed = true)
+        every { this@spyk["isValid"](ofType<Validatable>()) } returns true
+        coEvery { this@spyk["saveToStorage"](ofType<LoginToken>()) } returns mockk<Unit>(relaxed = true)
         coEvery { this@spyk["loadFromStorage"]() } returns mockk<LoginToken>(relaxed = true)
+        coEvery { this@spyk["isUserIdentified"]() } returns true
         every { this@spyk["toDto"](ofType<LoginToken>()) } returns mockk<LocalTokenResponseDto>(relaxed = true)
     }
 
+    // 저장
     context("토큰을 저장할 때") {
         tokenRepository.save(mockk<LoginToken>(relaxed = true))
 
@@ -105,8 +107,6 @@ class TokenRepositoryTest: FunSpec({
     }
 
     context("토큰이 유효하면") {
-        every { tokenRepository["isValid"](ofType<Validatable>()) } returns true
-
         val result = tokenRepository.save(mockk<LoginRefreshToken>(relaxed = true))
 
         test("TokenStorage에 저장한다") {
@@ -118,6 +118,7 @@ class TokenRepositoryTest: FunSpec({
         }
     }
 
+    // 로드
     context("로드할 토큰이 존재하지 않으면") {
         coEvery { tokenRepository["loadFromStorage"]() } returns null
 
@@ -147,8 +148,6 @@ class TokenRepositoryTest: FunSpec({
     }
 
     context("로드할 토큰이 존재하면") {
-        coEvery { tokenRepository["loadFromStorage"]() } returns mockk<LoginToken>(relaxed = true)
-
         tokenRepository.load()
 
         test("사용자를 식별한다") {
@@ -167,14 +166,10 @@ class TokenRepositoryTest: FunSpec({
     }
 
     context ("사용자를 식별하면") {
-        coEvery { tokenRepository["isUserIdentified"]() } returns true
-
         val result = tokenRepository.load()
 
         test("로드를 성공 처리한다") {
             result should beInstanceOf<NetworkSuccess<LocalTokenResponseDto>>()
         }
     }
-
-    afterEach { unmockkAll() }
 })

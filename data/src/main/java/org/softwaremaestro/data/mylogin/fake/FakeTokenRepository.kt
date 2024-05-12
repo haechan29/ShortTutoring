@@ -21,9 +21,9 @@ import org.softwaremaestro.domain.mylogin.entity.Validatable
 
 abstract class FakeTokenRepository<Token: LoginToken>(
     private val tokenStorage: TokenStorage<Token>,
-    private val tokenNotFoundFailure: TokenNotFound,
-    private val invalidTokenFailure: InvalidToken,
-    private val userIdentifier: UserIdentifier
+    private val userIdentifier: UserIdentifier,
+    private val tokenNotFoundFailure: TokenNotFound<Token>,
+    private val invalidTokenFailure: InvalidToken<Token>
 ): TokenRepository<Token> {
     private val notIdentifiedUser = NotIdentifiedUser
 
@@ -66,9 +66,9 @@ abstract class FakeTokenRepository<Token: LoginToken>(
 abstract class FakeAccessTokenRepository(
     tokenStorage: TokenStorage<LoginAccessToken> = FakeAccessTokenStorage,
     userIdentifier: UserIdentifier
-): FakeTokenRepository<LoginAccessToken>(tokenStorage, AccessTokenNotFound, InvalidAccessToken, userIdentifier)
+): FakeTokenRepository<LoginAccessToken>(tokenStorage, userIdentifier, AccessTokenNotFound, InvalidAccessToken)
 
 abstract class FakeRefreshTokenRepository(
     tokenStorage: TokenStorage<LoginRefreshToken> = FakeRefreshTokenStorage,
     userIdentifier: UserIdentifier
-): FakeTokenRepository<LoginRefreshToken>(tokenStorage, RefreshTokenNotFound, InvalidRefreshToken, userIdentifier)
+): FakeTokenRepository<LoginRefreshToken>(tokenStorage, userIdentifier, RefreshTokenNotFound, InvalidRefreshToken)
