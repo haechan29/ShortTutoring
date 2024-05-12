@@ -1,5 +1,6 @@
 package org.softwaremaestro.data.mylogin.fake
 
+import org.softwaremaestro.data.mylogin.util.attemptUntil
 import org.softwaremaestro.domain.mylogin.TokenRepository
 import org.softwaremaestro.domain.mylogin.entity.AccessTokenNotFound
 import org.softwaremaestro.domain.mylogin.entity.EmptyResponseDto
@@ -46,13 +47,13 @@ abstract class FakeTokenIssuer<Token: LoginToken>(
     }
 
     private suspend fun getDtoOrNull(): IssueTokenRequestDto? {
-        return when(val dtoResult = getDtoResult()) {
+        return when(val dtoResult = getLocalTokenDtoResult()) {
             is NetworkFailure -> return null
             is NetworkSuccess -> toDto(dtoResult.dto)
         }
     }
 
-    protected abstract suspend fun getDtoResult(): NetworkResult<LocalTokenResponseDto>
+    protected abstract suspend fun getLocalTokenDtoResult(): NetworkResult<LocalTokenResponseDto>
 
     private fun toDto(dto: LocalTokenResponseDto): IssueTokenRequestDto {
         TODO()
@@ -67,25 +68,13 @@ abstract class FakeTokenIssuer<Token: LoginToken>(
     private suspend fun saveToken(token: Token) {
         TODO()
     }
-
-    private suspend fun attemptUntil(attemptLimit: Int, f: suspend () -> NetworkResult<EmptyResponseDto>)
-    : NetworkResult<EmptyResponseDto> {
-        var attempt = 0
-        var result = f()
-        while (attempt < attemptLimit && result is NetworkFailure) {
-            result = f()
-            attempt++
-        }
-        return result
-    }
 }
 
 abstract class FakeAccessTokenIssuer(
     private val tokenRepository: TokenRepository<LoginAccessToken>,
     api: IssueTokenApi,
-    tokenNotFound: AccessTokenNotFound = AccessTokenNotFound
-): FakeTokenIssuer<LoginAccessToken>(api, tokenNotFound) {
-    override suspend fun getDtoResult(): NetworkResult<LocalTokenResponseDto> {
+): FakeTokenIssuer<LoginAccessToken>(api, AccessTokenNotFound) {
+    override suspend fun getLocalTokenDtoResult(): NetworkResult<LocalTokenResponseDto> {
         return loadRefreshToken()
     }
 
@@ -98,7 +87,7 @@ abstract class FakeRefreshTokenIssuer(
     api: IssueTokenApi,
     tokenNotFound: RefreshTokenNotFound = RefreshTokenNotFound
 ): FakeTokenIssuer<LoginRefreshToken>(api, tokenNotFound) {
-    final override suspend fun getDtoResult(): NetworkResult<LocalTokenResponseDto> {
+    final override suspend fun getLocalTokenDtoResult(): NetworkResult<LocalTokenResponseDto> {
         return getLoginInfo()
     }
 

@@ -1,4 +1,4 @@
-package org.softwaremaestro.data.mylogin.Util
+package org.softwaremaestro.data.mylogin.util
 
 import org.softwaremaestro.domain.mylogin.entity.Failure
 import org.softwaremaestro.domain.mylogin.entity.Result
@@ -27,4 +27,14 @@ fun <Dto: ResponseDto> NetworkResult<Dto>.dtoOrNull(): Dto? {
         is NetworkSuccess<Dto> -> dto
         is NetworkFailure -> null
     }
+}
+
+suspend fun <Dto: ResponseDto> attemptUntil(attemptLimit: Int, f: suspend () -> NetworkResult<Dto>): NetworkResult<Dto> {
+    var attempt = 0
+    var result = f()
+    while (attempt < attemptLimit && result is NetworkFailure) {
+        result = f()
+        attempt++
+    }
+    return result
 }

@@ -1,9 +1,9 @@
 package org.softwaremaestro.data.mylogin.fake
 
 import kotlinx.coroutines.delay
-import org.softwaremaestro.data.mylogin.Util.SyncQueue
-import org.softwaremaestro.data.mylogin.Util.dtoOrNull
-import org.softwaremaestro.data.mylogin.Util.nullIfOk
+import org.softwaremaestro.data.mylogin.util.NetworkSyncQueue.Companion.sync
+import org.softwaremaestro.data.mylogin.util.dtoOrNull
+import org.softwaremaestro.data.mylogin.util.nullIfOk
 import org.softwaremaestro.domain.mylogin.TokenRepository
 import org.softwaremaestro.domain.mylogin.entity.AccessTokenIsNotAuthenticated
 import org.softwaremaestro.domain.mylogin.entity.AccessTokenNotFound
@@ -22,7 +22,6 @@ import org.softwaremaestro.domain.mylogin.entity.TokenInjector
 
 abstract class FakeTokenInjector(
     private val authenticator: TokenAuthenticator,
-    private val syncQueue: SyncQueue<NetworkResult<EmptyResponseDto>>,
     private val tokenRepository: TokenRepository<LoginAccessToken>
 ): TokenInjector {
     private val accessTokenNotFound: AccessTokenNotFound = AccessTokenNotFound
@@ -46,7 +45,7 @@ abstract class FakeTokenInjector(
     }
 
     private suspend fun issueToken(authFailure: Failure<Authentication>): NetworkResult<EmptyResponseDto> {
-        return syncQueue.sync { issueTokenFromServer(authFailure) }
+        return sync { issueTokenFromServer(authFailure) }
     }
 
     private suspend fun issueTokenFromServer(authFailure: Failure<Authentication>): NetworkResult<EmptyResponseDto> {

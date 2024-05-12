@@ -8,11 +8,10 @@ import io.mockk.coEvery
 import io.mockk.coVerify
 import io.mockk.mockk
 import io.mockk.spyk
-import io.mockk.unmockkAll
 import kotlinx.coroutines.delay
 import kotlinx.coroutines.launch
 import kotlinx.coroutines.test.runTest
-import org.softwaremaestro.data.mylogin.Util.SyncQueue
+import org.softwaremaestro.data.mylogin.util.SyncQueue
 import org.softwaremaestro.data.mylogin.fake.FakeTokenInjector
 import org.softwaremaestro.domain.mylogin.TokenRepository
 import org.softwaremaestro.domain.mylogin.entity.AccessTokenIsNotAuthenticated
@@ -30,14 +29,11 @@ import org.softwaremaestro.domain.mylogin.entity.TokenAuthenticator
 class TokenInjectorTest: FunSpec({
     isolationMode = IsolationMode.InstancePerLeaf
 
-    beforeEach { unmockkAll() }
-
     val tokenAuthenticator = mockk<TokenAuthenticator>(relaxed = true)
-    val syncQueue = SyncQueue<NetworkResult<EmptyResponseDto>>()
     val accessTokenRepository = mockk<TokenRepository<LoginAccessToken>>(relaxed = true)
 
     val tokenInjector = spyk(
-        object: FakeTokenInjector(tokenAuthenticator, syncQueue, accessTokenRepository) {},
+        objToCopy = object: FakeTokenInjector(tokenAuthenticator, accessTokenRepository) {},
         recordPrivateCalls = true
     ) {
         coEvery { this@spyk["authenticateToken"]() } returns mockk<Success<Authentication>>(relaxed = true)
@@ -83,13 +79,10 @@ class TokenInjectorTest: FunSpec({
             mockk<NetworkResult<EmptyResponseDto>>(relaxed = true)
         }
 
-        val results = mutableListOf<NetworkResult<EmptyResponseDto>>()
-
         runTest {
             repeat(10) {
                 launch {
-                    val result = tokenInjector.injectToken(mockk<Request>(relaxed = true))
-                    results.add(result)
+                    tokenInjector.injectToken(mockk<Request>(relaxed = true))
                 }
             }
         }
@@ -98,6 +91,4 @@ class TokenInjectorTest: FunSpec({
             coVerify(exactly = 1) { tokenInjector["issueTokenFromServer"](ofType<Failure<Authentication>>()) }
         }
     }
-
-    afterEach { unmockkAll() }
 })

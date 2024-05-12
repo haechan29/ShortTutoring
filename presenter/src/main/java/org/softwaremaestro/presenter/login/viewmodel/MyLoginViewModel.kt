@@ -16,8 +16,6 @@ import kotlinx.coroutines.flow.retryWhen
 import kotlinx.coroutines.launch
 import org.softwaremaestro.domain.mylogin.entity.LoginAccessToken
 import org.softwaremaestro.domain.mylogin.entity.LoginToken
-import org.softwaremaestro.domain.mylogin.entity.exception.TokenException
-import org.softwaremaestro.domain.mylogin.entity.exception.TokenNotFoundException
 import org.softwaremaestro.presenter.util.UIState
 import javax.inject.Inject
 

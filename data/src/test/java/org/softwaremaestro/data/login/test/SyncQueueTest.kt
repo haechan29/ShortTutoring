@@ -9,38 +9,32 @@ import kotlinx.coroutines.Job
 import kotlinx.coroutines.delay
 import kotlinx.coroutines.joinAll
 import kotlinx.coroutines.launch
-import org.softwaremaestro.data.mylogin.Util.SyncQueue
+import kotlinx.coroutines.test.runTest
+import org.softwaremaestro.data.mylogin.util.SyncQueue
 
 class SyncQueueTest: FunSpec({
     isolationMode = IsolationMode.InstancePerLeaf
 
-    beforeEach { unmockkAll() }
+    var invoked = 0
 
-    val syncQueue = spyk(SyncQueue<Int>(), recordPrivateCalls = true)
+    val f = suspend {
+        delay(100)
+        invoked++
+    }
 
-    context("함수를 여러 번 호출해도").config(coroutineTestScope = true) {
-        var invoked = 0
+    val syncQueue = spyk(object: SyncQueue<Int>(f) {}, recordPrivateCalls = true)
 
-        val f = suspend {
-            delay(100)
-            invoked++
-        }
-
-        val jobs = mutableListOf<Job>()
-
-        repeat(10) {
-            val job = launch {
-                syncQueue.sync { f() }
+    context("함수를 여러 번 호출해도") {
+        runTest {
+            repeat(10) {
+                launch {
+                    syncQueue.sync()
+                }
             }
-            jobs.add(job)
         }
-
-        jobs.joinAll()
 
         test("함수는 한 번만 호출된다") {
             invoked shouldBe 1
         }
     }
-
-    afterEach { unmockkAll() }
 })

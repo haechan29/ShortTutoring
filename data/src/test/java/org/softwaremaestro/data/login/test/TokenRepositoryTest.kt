@@ -1,4 +1,4 @@
-package org.softwaremaestro.data.login.test_bed
+package org.softwaremaestro.data.login.test
 
 import io.kotest.core.spec.IsolationMode
 import io.kotest.core.spec.style.FunSpec
@@ -37,8 +37,12 @@ class TokenRepositoryTest: FunSpec({
 
     val accessTokenStorage = mockk<TokenStorage<LoginAccessToken>>(relaxed = true)
     val refreshTokenStorage = mockk<TokenStorage<LoginRefreshToken>>(relaxed = true)
+    val tokenStorage = mockk<TokenStorage<LoginToken>>(relaxed = true)
 
     val userIdentifier = mockk<UserIdentifier>(relaxed = true)
+
+    val tokenNotFoundFailure = mockk<TokenNotFound<LoginToken>>(relaxed = true)
+    val invalidTokenFailure = mockk<InvalidToken<LoginToken>>(relaxed = true)
 
     val accessTokenRepository = spyk(
         object: FakeAccessTokenRepository(accessTokenStorage, userIdentifier) {}, recordPrivateCalls = true
@@ -47,11 +51,6 @@ class TokenRepositoryTest: FunSpec({
     val refreshTokenRepository = spyk(
         object: FakeRefreshTokenRepository(refreshTokenStorage, userIdentifier) {}, recordPrivateCalls = true
     )
-
-    val tokenStorage = mockk<TokenStorage<LoginToken>>(relaxed = true)
-
-    val tokenNotFoundFailure = mockk<TokenNotFound<LoginToken>>(relaxed = true)
-    val invalidTokenFailure = mockk<InvalidToken<LoginToken>>(relaxed = true)
 
     val tokenRepository = spyk(
         object: FakeTokenRepository<LoginToken>(tokenStorage, userIdentifier, tokenNotFoundFailure, invalidTokenFailure) {} , recordPrivateCalls = true
