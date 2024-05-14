@@ -7,19 +7,16 @@ import io.mockk.coEvery
 import io.mockk.coVerify
 import io.mockk.mockk
 import io.mockk.spyk
-import io.mockk.unmockkAll
 import org.softwaremaestro.data.mylogin.fake.FakeTokenAuthenticator
 import org.softwaremaestro.domain.mylogin.TokenRepository
-import org.softwaremaestro.domain.mylogin.entity.AccessTokenIsAuthenticated
-import org.softwaremaestro.domain.mylogin.entity.AccessTokenIsNotAuthenticated
-import org.softwaremaestro.domain.mylogin.entity.EmptyResponseDto
-import org.softwaremaestro.domain.mylogin.entity.NetworkFailure
-import org.softwaremaestro.domain.mylogin.entity.LocalTokenResponseDto
+import org.softwaremaestro.domain.mylogin.entity.result.AccessTokenIsAuthenticated
+import org.softwaremaestro.domain.mylogin.entity.result.AccessTokenIsNotAuthenticated
+import org.softwaremaestro.domain.mylogin.entity.result.NetworkFailure
+import org.softwaremaestro.domain.mylogin.entity.dto.LocalTokenResponseDto
 import org.softwaremaestro.domain.mylogin.entity.LoginAccessToken
 import org.softwaremaestro.domain.mylogin.entity.LoginRefreshToken
-import org.softwaremaestro.domain.mylogin.entity.NetworkResult
-import org.softwaremaestro.domain.mylogin.entity.NetworkSuccess
-import org.softwaremaestro.domain.mylogin.entity.RefreshTokenIsNotAuthenticated
+import org.softwaremaestro.domain.mylogin.entity.result.NetworkSuccess
+import org.softwaremaestro.domain.mylogin.entity.result.RefreshTokenIsNotAuthenticated
 
 class TokenAuthenticatorTest: FunSpec({
     isolationMode = IsolationMode.InstancePerLeaf

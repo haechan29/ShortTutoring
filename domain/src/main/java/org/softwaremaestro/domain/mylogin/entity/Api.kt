@@ -1,8 +1,17 @@
 package org.softwaremaestro.domain.mylogin.entity
 
-interface Api<Dto: ResponseDto> {
-    suspend fun sendRequest(dto: RequestDto): NetworkResult<Dto>
+import org.softwaremaestro.domain.mylogin.entity.dto.EmptyRequestDto
+import org.softwaremaestro.domain.mylogin.entity.dto.EmptyResponseDto
+import org.softwaremaestro.domain.mylogin.entity.dto.LoginRequestDto
+import org.softwaremaestro.domain.mylogin.entity.dto.LoginResponseDto
+import org.softwaremaestro.domain.mylogin.entity.dto.RequestDto
+import org.softwaremaestro.domain.mylogin.entity.dto.ResponseDto
+import org.softwaremaestro.domain.mylogin.entity.result.NetworkResult
+
+interface Api<in ReqDto: RequestDto, out ResDto: ResponseDto> {
+    suspend fun sendRequest(dto: ReqDto): NetworkResult<ResDto>
 }
 
-interface LoginApi: Api<LoginResponseDto>
-interface IssueTokenApi: Api<IssueTokenResponseDto>
+interface LoginApi: Api<LoginRequestDto, LoginResponseDto>
+interface AutoLoginApi: Api<EmptyRequestDto, EmptyResponseDto>
+interface IssueTokenApi: Api<LoginRequestDto, LoginResponseDto>

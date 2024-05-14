@@ -1,24 +1,23 @@
 package org.softwaremaestro.data.mylogin.fake
 
 import org.softwaremaestro.domain.mylogin.TokenRepository
-import org.softwaremaestro.domain.mylogin.entity.AccessTokenIsAuthenticated
-import org.softwaremaestro.domain.mylogin.entity.AccessTokenIsNotAuthenticated
-import org.softwaremaestro.domain.mylogin.entity.Authentication
-import org.softwaremaestro.domain.mylogin.entity.LocalTokenResponseDto
-import org.softwaremaestro.domain.mylogin.entity.NetworkFailure
+import org.softwaremaestro.domain.mylogin.entity.result.AccessTokenIsAuthenticated
+import org.softwaremaestro.domain.mylogin.entity.result.AccessTokenIsNotAuthenticated
+import org.softwaremaestro.domain.mylogin.entity.result.AuthResult
+import org.softwaremaestro.domain.mylogin.entity.dto.LocalTokenResponseDto
+import org.softwaremaestro.domain.mylogin.entity.result.NetworkFailure
 import org.softwaremaestro.domain.mylogin.entity.LoginAccessToken
 import org.softwaremaestro.domain.mylogin.entity.LoginRefreshToken
-import org.softwaremaestro.domain.mylogin.entity.NetworkResult
-import org.softwaremaestro.domain.mylogin.entity.NetworkSuccess
-import org.softwaremaestro.domain.mylogin.entity.RefreshTokenIsNotAuthenticated
-import org.softwaremaestro.domain.mylogin.entity.Result
+import org.softwaremaestro.domain.mylogin.entity.result.NetworkResult
+import org.softwaremaestro.domain.mylogin.entity.result.NetworkSuccess
+import org.softwaremaestro.domain.mylogin.entity.result.RefreshTokenIsNotAuthenticated
 import org.softwaremaestro.domain.mylogin.entity.TokenAuthenticator
 
 abstract class FakeTokenAuthenticator(
     private val accessTokenRepository: TokenRepository<LoginAccessToken>,
     private val refreshTokenRepository: TokenRepository<LoginRefreshToken>
 ): TokenAuthenticator {
-    override suspend fun authToken(): Result<Authentication> {
+    override suspend fun authToken(): AuthResult {
         if (loadAccessToken() is NetworkSuccess) {
             return AccessTokenIsAuthenticated
         }

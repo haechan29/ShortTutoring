@@ -2,8 +2,8 @@ package org.softwaremaestro.data.mylogin.util
 
 import kotlinx.coroutines.sync.Mutex
 import kotlinx.coroutines.sync.withLock
-import org.softwaremaestro.domain.mylogin.entity.EmptyResponseDto
-import org.softwaremaestro.domain.mylogin.entity.NetworkResult
+import org.softwaremaestro.domain.mylogin.entity.dto.EmptyResponseDto
+import org.softwaremaestro.domain.mylogin.entity.result.NetworkResult
 
 class NetworkSyncQueue {
     companion object {
@@ -43,9 +43,9 @@ abstract class SyncQueue<R>(private val f: suspend () -> R, private val onFinish
             if (result == null) {
                 result = f()
             }
-        }
 
-        temp = result!!
+            temp = result!!
+        }
 
         mutex.withLock {
             pendingCount--

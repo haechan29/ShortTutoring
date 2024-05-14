@@ -1,19 +1,14 @@
 package org.softwaremaestro.data.mylogin.util
 
-import org.softwaremaestro.domain.mylogin.entity.EmptyResponseDto
-import org.softwaremaestro.domain.mylogin.entity.Failure
-import org.softwaremaestro.domain.mylogin.entity.Result
-import org.softwaremaestro.domain.mylogin.entity.NetworkFailure
-import org.softwaremaestro.domain.mylogin.entity.NetworkSuccess
-import org.softwaremaestro.domain.mylogin.entity.NetworkResult
-import org.softwaremaestro.domain.mylogin.entity.ResponseDto
-
-fun <Dto: ResponseDto> NetworkResult<Dto>.ifFail(handleFailure: (NetworkFailure) -> Nothing): NetworkSuccess<Dto> {
-    return when (this) {
-        is NetworkSuccess -> this
-        is NetworkFailure -> handleFailure(this)
-    }
-}
+import org.softwaremaestro.domain.mylogin.entity.result.AuthFailure
+import org.softwaremaestro.domain.mylogin.entity.result.AuthResult
+import org.softwaremaestro.domain.mylogin.entity.result.AuthSuccess
+import org.softwaremaestro.domain.mylogin.entity.result.NetworkFailure
+import org.softwaremaestro.domain.mylogin.entity.result.NetworkSuccess
+import org.softwaremaestro.domain.mylogin.entity.result.NetworkResult
+import org.softwaremaestro.domain.mylogin.entity.dto.ResponseDto
+import kotlin.reflect.full.memberProperties
+import kotlin.reflect.jvm.isAccessible
 
 fun <Dto: ResponseDto> NetworkResult<Dto>.nullIfSuccess(): NetworkFailure? {
     return when (this) {
@@ -22,10 +17,10 @@ fun <Dto: ResponseDto> NetworkResult<Dto>.nullIfSuccess(): NetworkFailure? {
     }
 }
 
-fun <T> Result<T>.nullIfSuccess(): Failure<T>? {
+fun AuthResult.nullIfSuccess(): AuthFailure? {
     return when (this) {
-        is Failure<T> -> this
-        else -> null
+        is AuthSuccess -> null
+        is AuthFailure -> this
     }
 }
 
@@ -36,12 +31,33 @@ fun <Dto: ResponseDto> NetworkResult<Dto>.dtoOrNull(): Dto? {
     }
 }
 
-suspend fun <Dto: ResponseDto> attemptUntil(attemptLimit: Int, f: suspend () -> NetworkResult<Dto>): NetworkResult<Dto> {
+fun containsNullField(instance: Any): Boolean {
+    val kClass = instance::class
+    val properties = kClass.memberProperties
+
+    for (property in properties) {
+        property.isAccessible = true
+        (property as? kotlin.reflect.KProperty1<Any, *>)?.get(instance) ?: return true
+    }
+    return false
+}
+
+// TODO("token issuer에 있는 테스트 가져오기)
+suspend fun <Dto: ResponseDto> attemptUntilSuccess(
+    attemptLimit: Int,
+    vararg acceptableFailures: NetworkFailure = emptyArray(),
+    f: suspend () -> NetworkResult<Dto>
+): NetworkResult<Dto> {
     var attempt = 0
     var result = f()
-    while (attempt < attemptLimit && result is NetworkFailure) {
+
+    while (true) {
+        if (attempt >= attemptLimit) break
+        if (result is NetworkSuccess || result in acceptableFailures) break
+
         result = f()
         attempt++
     }
+
     return result
 }

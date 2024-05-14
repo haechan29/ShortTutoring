@@ -1,52 +1,51 @@
 package org.softwaremaestro.data.mylogin.fake
 
-import org.softwaremaestro.data.mylogin.util.attemptUntil
+import org.softwaremaestro.data.mylogin.util.attemptUntilSuccess
+import org.softwaremaestro.data.mylogin.util.dtoOrNull
 import org.softwaremaestro.domain.mylogin.TokenRepository
-import org.softwaremaestro.domain.mylogin.entity.AccessTokenNotFound
-import org.softwaremaestro.domain.mylogin.entity.EmptyResponseDto
-import org.softwaremaestro.domain.mylogin.entity.ResponseDto
-import org.softwaremaestro.domain.mylogin.entity.NetworkFailure
-import org.softwaremaestro.domain.mylogin.entity.InvalidLoginInfo
-import org.softwaremaestro.domain.mylogin.entity.IssueTokenApi
-import org.softwaremaestro.domain.mylogin.entity.IssueTokenRequestDto
-import org.softwaremaestro.domain.mylogin.entity.IssueTokenResponseDto
-import org.softwaremaestro.domain.mylogin.entity.LocalTokenResponseDto
+import org.softwaremaestro.domain.mylogin.entity.result.AccessTokenNotFound
+import org.softwaremaestro.domain.mylogin.entity.dto.EmptyResponseDto
+import org.softwaremaestro.domain.mylogin.entity.dto.ResponseDto
+import org.softwaremaestro.domain.mylogin.entity.result.NetworkFailure
+import org.softwaremaestro.domain.mylogin.entity.result.InvalidLoginInfo
+import org.softwaremaestro.domain.mylogin.entity.dto.LoginRequestDto
+import org.softwaremaestro.domain.mylogin.entity.dto.LoginResponseDto
+import org.softwaremaestro.domain.mylogin.entity.dto.LocalTokenResponseDto
 import org.softwaremaestro.domain.mylogin.entity.LoginAccessToken
 import org.softwaremaestro.domain.mylogin.entity.LoginRefreshToken
 import org.softwaremaestro.domain.mylogin.entity.LoginToken
-import org.softwaremaestro.domain.mylogin.entity.NetworkResult
-import org.softwaremaestro.domain.mylogin.entity.NetworkSuccess
-import org.softwaremaestro.domain.mylogin.entity.RefreshTokenNotFound
+import org.softwaremaestro.domain.mylogin.entity.result.NetworkResult
+import org.softwaremaestro.domain.mylogin.entity.result.NetworkSuccess
+import org.softwaremaestro.domain.mylogin.entity.result.RefreshTokenNotFound
 import org.softwaremaestro.domain.mylogin.entity.TokenIssuer
-import org.softwaremaestro.domain.mylogin.entity.TokenNotFound
+import org.softwaremaestro.domain.mylogin.entity.result.TokenNotFound
 
 abstract class FakeTokenIssuer<Token: LoginToken>(
-    private val api: IssueTokenApi,
     private val tokenNotFound: TokenNotFound<Token>
 ): TokenIssuer<Token> {
     final override suspend fun issueToken(): NetworkResult<EmptyResponseDto> {
         val dto = getDtoOrNull() ?: return tokenNotFound
 
-        var result = sendRequest(dto)
+        return attemptUntilSuccess(3, InvalidLoginInfo) {
+            val result = sendRequest(dto)
 
-        if (result is InvalidLoginInfo) return result
+            val body = result.dtoOrNull() ?: return@attemptUntilSuccess result as NetworkFailure
 
-        return attemptUntil(3) {
-            result = sendRequest(dto)
-            if (result is NetworkFailure) return@attemptUntil result as NetworkFailure
-
-            val body = (result as NetworkSuccess<ResponseDto>).dto
-            val tokens = getTokens(body).ifEmpty { return@attemptUntil tokenNotFound }
+            val tokens = getTokens(body).ifEmpty { return@attemptUntilSuccess tokenNotFound }
 
             tokens.forEach { token ->
-                saveToken(token)
+                saveTokenToStorage(token)
             }
 
             NetworkSuccess(EmptyResponseDto)
         }
     }
 
-    private suspend fun getDtoOrNull(): IssueTokenRequestDto? {
+    private suspend fun saveToken() {
+        TODO()
+    }
+
+    private suspend fun getDtoOrNull(): LoginRequestDto? {
         return when(val dtoResult = getLocalTokenDtoResult()) {
             is NetworkFailure -> return null
             is NetworkSuccess -> toDto(dtoResult.dto)
@@ -55,25 +54,24 @@ abstract class FakeTokenIssuer<Token: LoginToken>(
 
     protected abstract suspend fun getLocalTokenDtoResult(): NetworkResult<LocalTokenResponseDto>
 
-    private fun toDto(dto: LocalTokenResponseDto): IssueTokenRequestDto {
+    private fun toDto(dto: LocalTokenResponseDto): LoginRequestDto {
         TODO()
     }
 
-    private suspend fun sendRequest(dto: IssueTokenRequestDto): NetworkResult<IssueTokenResponseDto> {
+    private suspend fun sendRequest(dto: LoginRequestDto): NetworkResult<LoginResponseDto> {
         TODO()
     }
 
     protected abstract fun getTokens(body: ResponseDto): List<Token>
 
-    private suspend fun saveToken(token: Token) {
+    private suspend fun saveTokenToStorage(token: Token) {
         TODO()
     }
 }
 
 abstract class FakeAccessTokenIssuer(
     private val tokenRepository: TokenRepository<LoginAccessToken>,
-    api: IssueTokenApi,
-): FakeTokenIssuer<LoginAccessToken>(api, AccessTokenNotFound) {
+): FakeTokenIssuer<LoginAccessToken>(AccessTokenNotFound) {
     override suspend fun getLocalTokenDtoResult(): NetworkResult<LocalTokenResponseDto> {
         return loadRefreshToken()
     }
@@ -84,9 +82,8 @@ abstract class FakeAccessTokenIssuer(
 }
 
 abstract class FakeRefreshTokenIssuer(
-    api: IssueTokenApi,
     tokenNotFound: RefreshTokenNotFound = RefreshTokenNotFound
-): FakeTokenIssuer<LoginRefreshToken>(api, tokenNotFound) {
+): FakeTokenIssuer<LoginRefreshToken>(tokenNotFound) {
     final override suspend fun getLocalTokenDtoResult(): NetworkResult<LocalTokenResponseDto> {
         return getLoginInfo()
     }
