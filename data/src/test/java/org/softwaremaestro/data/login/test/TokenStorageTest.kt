@@ -3,18 +3,15 @@ package org.softwaremaestro.data.login.test
 import io.kotest.core.spec.IsolationMode
 import io.kotest.core.spec.style.FunSpec
 import io.kotest.matchers.shouldBe
-import io.mockk.every
 import io.mockk.mockk
-import io.mockk.mockkObject
 import io.mockk.spyk
-import io.mockk.unmockkAll
-import org.softwaremaestro.data.mylogin.fake.FakeTokenStorage
-import org.softwaremaestro.domain.mylogin.entity.LoginToken
+import org.softwaremaestro.domain.fake_login.entity.LoginToken
+import org.softwaremaestro.data.fake_login.impl.FakeLoginTokenStorage
 
 class TokenStorageTest: FunSpec({
     isolationMode = IsolationMode.InstancePerLeaf
 
-    val tokenStorage = spyk<FakeTokenStorage<LoginToken>>(recordPrivateCalls = true)
+    val tokenStorage = spyk<FakeLoginTokenStorage>(recordPrivateCalls = true)
 
     test("로드할 토큰이 존재하지 않으면 null을 반환한다") {
         tokenStorage.clear()

@@ -27,6 +27,11 @@
             android:screenOrientation="portrait" />
         <activity
             android:name=".login.SplashActivity"
+            android:exported="false"
+            android:launchMode="singleTask"
+            android:screenOrientation="portrait" />
+        <activity
+            android:name=".login.FakeSplashActivity"
             android:exported="true"
             android:launchMode="singleTask"
             android:noHistory="true"

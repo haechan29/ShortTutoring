@@ -4,13 +4,10 @@ import io.kotest.core.spec.IsolationMode
 import io.kotest.core.spec.style.FunSpec
 import io.kotest.matchers.shouldBe
 import io.mockk.spyk
-import io.mockk.unmockkAll
-import kotlinx.coroutines.Job
 import kotlinx.coroutines.delay
-import kotlinx.coroutines.joinAll
 import kotlinx.coroutines.launch
 import kotlinx.coroutines.test.runTest
-import org.softwaremaestro.data.mylogin.util.SyncQueue
+import org.softwaremaestro.domain.fake_login.util.SyncQueue
 
 class SyncQueueTest: FunSpec({
     isolationMode = IsolationMode.InstancePerLeaf

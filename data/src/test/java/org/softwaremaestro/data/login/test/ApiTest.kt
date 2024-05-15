@@ -1,6 +1,5 @@
 package org.softwaremaestro.data.login.test
 
-import io.kotest.assertions.throwables.shouldThrow
 import io.kotest.core.spec.IsolationMode
 import io.kotest.core.spec.style.FunSpec
 import io.kotest.matchers.should
@@ -11,28 +10,25 @@ import io.mockk.coVerify
 import io.mockk.every
 import io.mockk.mockk
 import io.mockk.spyk
-import io.mockk.verify
-import net.bytebuddy.description.annotation.AnnotationDescription.Builder.ofType
-import org.softwaremaestro.data.mylogin.fake.FakeApi
-import org.softwaremaestro.domain.mylogin.entity.Interceptor
-import org.softwaremaestro.domain.mylogin.entity.Request
-import org.softwaremaestro.domain.mylogin.entity.Response
-import org.softwaremaestro.domain.mylogin.entity.result.NetworkResult
-import org.softwaremaestro.domain.mylogin.entity.dto.RequestDto
-import org.softwaremaestro.domain.mylogin.entity.dto.ResponseDto
-import org.softwaremaestro.domain.mylogin.entity.Server
-import org.softwaremaestro.domain.mylogin.entity.result.DtoContainsNullFieldFailure
-import org.softwaremaestro.domain.mylogin.entity.result.NetworkFailure
-import org.softwaremaestro.domain.mylogin.entity.result.NetworkSuccess
+import org.softwaremaestro.data.fake_login.fake.FakeApi
+import org.softwaremaestro.data.fake_login.legacy.Interceptor
+import org.softwaremaestro.data.fake_login.legacy.Request
+import org.softwaremaestro.data.fake_login.dto.RequestDto
+import org.softwaremaestro.data.fake_login.dto.ResponseDto
+import org.softwaremaestro.domain.fake_login.result.DtoContainsNullFieldFailure
+import org.softwaremaestro.domain.fake_login.result.NetworkFailure
+import org.softwaremaestro.domain.fake_login.result.NetworkResult
+import org.softwaremaestro.domain.fake_login.result.NetworkSuccess
 
 class ApiTest: FunSpec({
     isolationMode = IsolationMode.InstancePerLeaf
 
-    val interceptor = mockk<Interceptor>(relaxed = true)
-
-    val api = spyk(object: FakeApi(interceptor) {}, recordPrivateCalls = true) {
+    val api = spyk(object: FakeApi<RequestDto, ResponseDto>() {
+        override suspend fun sendToServer(request: Request<RequestDto>): NetworkResult<ResponseDto> {
+            return NetworkSuccess(mockk<ResponseDto>(relaxed = true))
+        }
+    }, recordPrivateCalls = true) {
         every { this@spyk["toRequest"](ofType<RequestDto>()) } returns mockk<Request<RequestDto>>(relaxed = true)
-        coEvery { this@spyk["sendToServer"](ofType<Request<RequestDto>>()) } returns mockk<NetworkSuccess<ResponseDto>>(relaxed = true)
     }
 
     context("API를 호출할 때") {

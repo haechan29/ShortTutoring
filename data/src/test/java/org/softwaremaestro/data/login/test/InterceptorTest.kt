@@ -2,37 +2,35 @@ package org.softwaremaestro.data.login.test
 
 import io.kotest.core.spec.IsolationMode
 import io.kotest.core.spec.style.FunSpec
-import io.kotest.matchers.collections.beIn
 import io.kotest.matchers.should
-import io.kotest.matchers.shouldBe
 import io.kotest.matchers.types.beInstanceOf
 import io.mockk.coEvery
 import io.mockk.coVerify
 import io.mockk.every
 import io.mockk.mockk
 import io.mockk.spyk
-import net.bytebuddy.description.annotation.AnnotationDescription.Builder.ofType
-import org.softwaremaestro.data.mylogin.fake.FakeInterceptor
-import org.softwaremaestro.domain.mylogin.entity.Request
-import org.softwaremaestro.domain.mylogin.entity.Response
-import org.softwaremaestro.domain.mylogin.entity.Server
-import org.softwaremaestro.domain.mylogin.entity.dto.RequestDto
-import org.softwaremaestro.domain.mylogin.entity.dto.ResponseDto
-import org.softwaremaestro.domain.mylogin.entity.TokenInjector
-import org.softwaremaestro.domain.mylogin.entity.dto.EmptyResponseDto
-import org.softwaremaestro.domain.mylogin.entity.result.AccessTokenNotFound
-import org.softwaremaestro.domain.mylogin.entity.result.DtoContainsNullFieldFailure
-import org.softwaremaestro.domain.mylogin.entity.result.NetworkFailure
-import org.softwaremaestro.domain.mylogin.entity.result.NetworkSuccess
-import org.softwaremaestro.domain.mylogin.entity.result.TokenNotFound
+import org.softwaremaestro.data.fake_login.fake.FakeInterceptor
+import org.softwaremaestro.data.fake_login.legacy.Request
+import org.softwaremaestro.data.fake_login.legacy.Response
+import org.softwaremaestro.data.fake_login.legacy.Server
+import org.softwaremaestro.data.fake_login.dto.RequestDto
+import org.softwaremaestro.data.fake_login.dto.ResponseDto
+import org.softwaremaestro.data.fake_login.legacy.TokenInjector
+import org.softwaremaestro.domain.fake_login.result.AccessTokenNotFound
+import org.softwaremaestro.domain.fake_login.result.DtoContainsNullFieldFailure
+import org.softwaremaestro.domain.fake_login.result.NetworkFailure
+import org.softwaremaestro.domain.fake_login.result.NetworkSuccess
 
 class InterceptorTest: FunSpec({
     isolationMode = IsolationMode.InstancePerLeaf
 
     val tokenInjector = mockk<TokenInjector>(relaxed = true)
-    val server = mockk<Server>(relaxed = true)
+    val server = mockk<Server<RequestDto, ResponseDto>>(relaxed = true)
 
-    val interceptor = spyk(FakeInterceptor(tokenInjector, server), recordPrivateCalls = true) {
+    val interceptor = spyk(
+        objToCopy = object: FakeInterceptor<RequestDto, ResponseDto>(tokenInjector, server) {},
+        recordPrivateCalls = true
+    ) {
         coEvery { this@spyk["injectToken"](ofType<Request<RequestDto>>()) } returns NetworkSuccess(mockk<ResponseDto>(relaxed = true))
         coEvery { this@spyk["sendToServer"](ofType<Request<RequestDto>>()) } returns mockk<Response<ResponseDto>>(relaxed = true) {
             every { body } returns NetworkSuccess(mockk<ResponseDto>(relaxed = true))

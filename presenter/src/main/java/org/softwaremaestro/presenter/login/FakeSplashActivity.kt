@@ -8,19 +8,18 @@ import androidx.appcompat.app.AppCompatActivity
 import androidx.lifecycle.lifecycleScope
 import dagger.hilt.android.AndroidEntryPoint
 import kotlinx.coroutines.launch
+import org.softwaremaestro.domain.fake_login.entity.Role
 import org.softwaremaestro.presenter.databinding.ActivitySplashBinding
 import org.softwaremaestro.presenter.login.viewmodel.FakeLoginViewModelModel
-import org.softwaremaestro.presenter.login.viewmodel.LoginViewModel
 import org.softwaremaestro.presenter.student_home.StudentHomeActivity
 import org.softwaremaestro.presenter.teacher_home.TeacherHomeActivity
 import org.softwaremaestro.presenter.util.UIState
 
 @AndroidEntryPoint
-class SplashActivity : AppCompatActivity() {
-
+class FakeSplashActivity : AppCompatActivity() {
     private lateinit var binding: ActivitySplashBinding
 
-    private val loginViewModel: LoginViewModel by viewModels()
+    private val fakeLoginViewModel: FakeLoginViewModelModel by viewModels()
 
     private var chatId: String? = null
 
@@ -32,7 +31,7 @@ class SplashActivity : AppCompatActivity() {
 
         getPendingIntent()
 
-        autoLogin()
+        fakeAutoLogin()
     }
 
     private fun getPendingIntent() {
@@ -41,28 +40,27 @@ class SplashActivity : AppCompatActivity() {
             try {
                 chatId = getString(APP_LINK_ARGS_CHAT_ID)
             } catch (e: Exception) {
-                Log.w(this@SplashActivity::class.java.name, "getPendingIntent: $e")
+                Log.w(this@FakeSplashActivity::class.java.name, "getPendingIntent: $e")
             }
         }
     }
 
+    private fun fakeAutoLogin() {
+        fakeLoginViewModel.autoLogin()
 
-    private fun autoLogin() {
-        loginViewModel.getRoleFromLocalDB()
-
-        loginViewModel.role.observe(this) {
-            if (it is UIState.Success) {
-                loginViewModel.registerFCMToken()
+        lifecycleScope.launch {
+            fakeLoginViewModel.role.collect { roleState ->
+                if (roleState is UIState.Success) {
+                    startTargetActivity(roleState.data)
+                }
             }
-            startTargetActivity(it._data)
         }
     }
 
-    private fun startTargetActivity(role: String? = null) {
+    private fun startTargetActivity(role: Role) {
         val targetActivityClass = when (role) {
-            "student" ->    StudentHomeActivity::class.java
-            "teacher" ->    TeacherHomeActivity::class.java
-            else ->         LoginActivity::class.java
+            Role.STUDENT -> StudentHomeActivity::class.java
+            Role.TEACHER -> TeacherHomeActivity::class.java
         }
 
         val intent = Intent(this, targetActivityClass).apply {
@@ -74,5 +72,4 @@ class SplashActivity : AppCompatActivity() {
     companion object {
         const val APP_LINK_ARGS_CHAT_ID = "chattingId"
     }
-
 }

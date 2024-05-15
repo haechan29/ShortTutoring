@@ -1,9 +1,7 @@
 package org.softwaremaestro.data.login.test
 
-import io.kotest.assertions.throwables.shouldThrow
 import io.kotest.core.spec.IsolationMode
 import io.kotest.core.spec.style.FunSpec
-import io.kotest.matchers.ints.exactly
 import io.kotest.matchers.shouldBe
 import io.kotest.property.Arb
 import io.kotest.property.arbitrary.boolean
@@ -18,12 +16,12 @@ import io.mockk.every
 import io.mockk.mockk
 import io.mockk.spyk
 import io.mockk.verify
-import org.softwaremaestro.data.mylogin.util.attemptUntilSuccess
-import org.softwaremaestro.data.mylogin.util.containsNullField
-import org.softwaremaestro.domain.mylogin.entity.dto.ResponseDto
-import org.softwaremaestro.domain.mylogin.entity.result.NetworkFailure
-import org.softwaremaestro.domain.mylogin.entity.result.NetworkResult
-import org.softwaremaestro.domain.mylogin.entity.result.NetworkSuccess
+import org.softwaremaestro.data.fake_login.dto.ResponseDto
+import org.softwaremaestro.domain.fake_login.result.NetworkFailure
+import org.softwaremaestro.domain.fake_login.result.NetworkResult
+import org.softwaremaestro.domain.fake_login.result.NetworkSuccess
+import org.softwaremaestro.domain.fake_login.util.attemptUntilSuccess
+import org.softwaremaestro.domain.fake_login.util.containsNullField
 
 class UtilTest: FunSpec({
     isolationMode = IsolationMode.InstancePerLeaf
