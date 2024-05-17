@@ -11,11 +11,11 @@ import io.mockk.mockk
 import io.mockk.spyk
 import org.softwaremaestro.data.fake_login.dto.IssueLoginTokenRequestDto
 import org.softwaremaestro.data.fake_login.dto.IssueTokenResponseDto
-import org.softwaremaestro.data.fake_login.fake.AccessTokenIssuer
 import org.softwaremaestro.data.fake_login.fake.FakeAccessTokenDao
-import org.softwaremaestro.data.fake_login.fake.RefreshTokenIssuer
+import org.softwaremaestro.data.fake_login.fake.FakeAccessTokenIssuer
 import org.softwaremaestro.data.fake_login.fake.FakeRefreshTokenDao
 import org.softwaremaestro.data.fake_login.fake.FakeLoginTokenIssuer
+import org.softwaremaestro.data.fake_login.fake.FakeRefreshTokenIssuer
 import org.softwaremaestro.data.fake_login.legacy.IssueAccessTokenApi
 import org.softwaremaestro.data.fake_login.legacy.IssueRefreshTokenApi
 import org.softwaremaestro.data.fake_login.legacy.IssueLoginTokenApi
@@ -38,14 +38,14 @@ class LoginTokenIssuerTest: FunSpec({
     val refreshTokenDao = mockk<FakeRefreshTokenDao>(relaxed = true)
 
     val accessTokenIssuer = spyk(
-        AccessTokenIssuer(issueAccessTokenApi, accessTokenDao, refreshTokenDao),
+        FakeAccessTokenIssuer(issueAccessTokenApi, accessTokenDao, refreshTokenDao),
         recordPrivateCalls = true) {
 
         coEvery { this@spyk["sendRequest"](ofType<IssueLoginTokenRequestDto>()) } returns NetworkSuccess(mockk<IssueTokenResponseDto>(relaxed = true))
     }
 
     val refreshTokenIssuer = spyk(
-        RefreshTokenIssuer(issueRefreshTokenApi, accessTokenDao, refreshTokenDao),
+        FakeRefreshTokenIssuer(issueRefreshTokenApi, accessTokenDao, refreshTokenDao),
         recordPrivateCalls = true
     ) {
         coEvery { this@spyk["sendRequest"](ofType<IssueLoginTokenRequestDto>()) } returns NetworkSuccess(mockk<IssueTokenResponseDto>(relaxed = true))

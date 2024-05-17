@@ -38,7 +38,7 @@ class LoginTokenInjectorTest: FunSpec({
         coEvery { this@spyk["authenticateToken"]() } returns mockk<AuthSuccess>(relaxed = true)
         coEvery { this@spyk["issueAccessToken"]() } returns mockk<NetworkResult<EmptyResponseDto>>(relaxed = true)
         coEvery { this@spyk["issueRefreshToken"]() } returns mockk<NetworkResult<EmptyResponseDto>>(relaxed = true)
-        coEvery { this@spyk["addTokenToRequestHeader"](ofType<LoginAccessToken>()) } returns mockk<NetworkResult<EmptyResponseDto>>(relaxed = true)
+        coEvery { this@spyk["addAccessTokenToRequestHeader"](ofType<Request<RequestDto>>(), ofType<LoginAccessToken>()) } returns mockk<Unit>(relaxed = true)
     }
 
     context("액세스 토큰이 유효하지 않으면") {
