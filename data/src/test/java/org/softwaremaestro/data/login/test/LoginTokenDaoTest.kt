@@ -14,9 +14,9 @@ import io.mockk.verify
 import org.softwaremaestro.domain.fake_login.entity.LoginAccessToken
 import org.softwaremaestro.domain.fake_login.entity.LoginRefreshToken
 import org.softwaremaestro.domain.fake_login.entity.LoginToken
-import org.softwaremaestro.data.fake_login.fake.AccessTokenStorageRepositoryImpl
-import org.softwaremaestro.data.fake_login.fake.RefreshTokenStorageRepositoryImpl
-import org.softwaremaestro.data.fake_login.fake.LoginTokenStorageRepositoryImpl
+import org.softwaremaestro.data.fake_login.fake.FakeAccessTokenDao
+import org.softwaremaestro.data.fake_login.fake.FakeRefreshTokenDao
+import org.softwaremaestro.data.fake_login.fake.FakeLoginTokenDao
 import org.softwaremaestro.domain.fake_login.result.Failure.Companion.ACCESS_TOKEN_NOT_FOUND
 import org.softwaremaestro.domain.fake_login.result.Failure.Companion.INVALID_ACCESS_TOKEN
 import org.softwaremaestro.domain.fake_login.result.Failure.Companion.INVALID_REFRESH_TOKEN
@@ -33,7 +33,7 @@ import org.softwaremaestro.data.fake_login.dto.LocalTokenResponseDto
 import org.softwaremaestro.data.fake_login.legacy.AccessTokenStorage
 import org.softwaremaestro.data.fake_login.legacy.RefreshTokenStorage
 
-class TokenStorageRepositoryTest: FunSpec({
+class LoginTokenDaoTest: FunSpec({
     isolationMode = IsolationMode.InstancePerLeaf
 
     val accessTokenStorage = mockk<AccessTokenStorage>(relaxed = true)
@@ -45,18 +45,18 @@ class TokenStorageRepositoryTest: FunSpec({
     val loginTokenNotFound = mockk<LoginTokenNotFound>(relaxed = true)
     val invalidLoginToken = mockk<InvalidLoginToken>(relaxed = true)
 
-    val accessTokenRepository = spyk(
-        AccessTokenStorageRepositoryImpl(accessTokenStorage, userIdentifier),
+    val accessTokenDao = spyk(
+        FakeAccessTokenDao(accessTokenStorage, userIdentifier),
         recordPrivateCalls = true
     )
 
-    val refreshTokenRepository = spyk(
-        RefreshTokenStorageRepositoryImpl(refreshTokenStorage, userIdentifier),
+    val refreshTokenDao = spyk(
+        FakeRefreshTokenDao(refreshTokenStorage, userIdentifier),
         recordPrivateCalls = true
     )
 
-    val tokenRepository = spyk(
-        object: LoginTokenStorageRepositoryImpl(
+    val loginTokenDao = spyk(
+        object: FakeLoginTokenDao(
             loginTokenStorage,
             userIdentifier,
             loginTokenNotFound,
@@ -71,20 +71,20 @@ class TokenStorageRepositoryTest: FunSpec({
 
     // 저장
     context("토큰을 저장할 때") {
-        tokenRepository.save(mockk<LoginToken>(relaxed = true))
+        loginTokenDao.save(mockk<LoginToken>(relaxed = true))
 
         test("유효성을 검증한다") {
-            verify { tokenRepository["isValid"](ofType<Validatable>()) }
+            verify { loginTokenDao["isValid"](ofType<Validatable>()) }
         }
     }
 
     context("토큰이 유효하지 않으면") {
-        every { tokenRepository["isValid"](ofType<Validatable>()) } returns false
+        every { loginTokenDao["isValid"](ofType<Validatable>()) } returns false
 
-        val result = tokenRepository.save(mockk<LoginToken>(relaxed = true))
+        val result = loginTokenDao.save(mockk<LoginToken>(relaxed = true))
 
         test("TokenStorage에 저장하지 않는다") {
-            coVerify(exactly = 0) { tokenRepository["saveToStorage"](ofType<LoginToken>()) }
+            coVerify(exactly = 0) { loginTokenDao["saveToStorage"](ofType<LoginToken>()) }
         }
 
         test("저장을 실패 처리한다") {
@@ -93,9 +93,9 @@ class TokenStorageRepositoryTest: FunSpec({
     }
 
     context("액세스 토큰이 유효하지 않으면") {
-        every { accessTokenRepository["isValid"](ofType<Validatable>()) } returns false
+        every { accessTokenDao["isValid"](ofType<Validatable>()) } returns false
 
-        val result = accessTokenRepository.save(mockk<LoginAccessToken>(relaxed = true))
+        val result = accessTokenDao.save(mockk<LoginAccessToken>(relaxed = true))
 
         test("액세스 토큰이 유효하지 않아서 저장이 실패했음을 알린다") {
             (result as NetworkFailure).message shouldBe INVALID_ACCESS_TOKEN
@@ -103,9 +103,9 @@ class TokenStorageRepositoryTest: FunSpec({
     }
 
     context("리프레시 토큰이 유효하지 않으면") {
-        every { refreshTokenRepository["isValid"](ofType<Validatable>()) } returns false
+        every { refreshTokenDao["isValid"](ofType<Validatable>()) } returns false
 
-        val result = refreshTokenRepository.save(mockk<LoginRefreshToken>(relaxed = true))
+        val result = refreshTokenDao.save(mockk<LoginRefreshToken>(relaxed = true))
 
         test("리프레시 토큰이 유효하지 않아서 저장이 실패했음을 알린다") {
             (result as NetworkFailure).message shouldBe INVALID_REFRESH_TOKEN
@@ -113,10 +113,10 @@ class TokenStorageRepositoryTest: FunSpec({
     }
 
     context("토큰이 유효하면") {
-        val result = tokenRepository.save(mockk<LoginRefreshToken>(relaxed = true))
+        val result = loginTokenDao.save(mockk<LoginRefreshToken>(relaxed = true))
 
         test("TokenStorage에 저장한다") {
-            coVerify { tokenRepository["saveToStorage"](ofType<LoginToken>()) }
+            coVerify { loginTokenDao["saveToStorage"](ofType<LoginToken>()) }
         }
 
         test("저장을 성공 처리한다") {
@@ -126,17 +126,17 @@ class TokenStorageRepositoryTest: FunSpec({
 
     // 로드
     context("로드할 토큰이 존재하지 않으면") {
-        coEvery { tokenRepository["loadFromStorage"]() } returns null
+        coEvery { loginTokenDao["loadFromStorage"]() } returns null
 
         test("로드를 실패 처리한다") {
-            tokenRepository.load() should beInstanceOf<NetworkFailure>()
+            loginTokenDao.load() should beInstanceOf<NetworkFailure>()
         }
     }
 
     context("로드할 액세스 토큰이 존재하지 않으면") {
-        coEvery { accessTokenRepository["loadFromStorage"]() } returns null
+        coEvery { accessTokenDao["loadFromStorage"]() } returns null
 
-        val result = accessTokenRepository.load()
+        val result = accessTokenDao.load()
 
         test("액세스 토큰이 존재하지 않아 로드가 실패했음을 알린다") {
             (result as NetworkFailure).message shouldBe ACCESS_TOKEN_NOT_FOUND
@@ -144,9 +144,9 @@ class TokenStorageRepositoryTest: FunSpec({
     }
 
     context("로드할 리프레시 토큰이 존재하지 않으면") {
-        coEvery { refreshTokenRepository["loadFromStorage"]() } returns null
+        coEvery { refreshTokenDao["loadFromStorage"]() } returns null
 
-        val result = refreshTokenRepository.load()
+        val result = refreshTokenDao.load()
 
         test("리프레시 토큰이 존재하지 않아 로드가 실패했음을 알린다") {
             (result as NetworkFailure).message shouldBe REFRESH_TOKEN_NOT_FOUND
@@ -154,17 +154,17 @@ class TokenStorageRepositoryTest: FunSpec({
     }
 
     context("로드할 토큰이 존재하면") {
-        tokenRepository.load()
+        loginTokenDao.load()
 
         test("사용자를 식별한다") {
-            coVerify { tokenRepository["isUserIdentified"]() }
+            coVerify { loginTokenDao["isUserIdentified"]() }
         }
     }
 
     context ("사용자를 식별하지 못하면") {
-        coEvery { tokenRepository["isUserIdentified"]() } returns false
+        coEvery { loginTokenDao["isUserIdentified"]() } returns false
 
-        val result = tokenRepository.load()
+        val result = loginTokenDao.load()
 
         test("로드를 실패 처리한다") {
             result should beInstanceOf<NetworkFailure>()
@@ -172,7 +172,7 @@ class TokenStorageRepositoryTest: FunSpec({
     }
 
     context ("사용자를 식별하면") {
-        val result = tokenRepository.load()
+        val result = loginTokenDao.load()
 
         test("로드를 성공 처리한다") {
             result should beInstanceOf<NetworkSuccess<LocalTokenResponseDto>>()

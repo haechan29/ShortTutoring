@@ -1,11 +1,12 @@
 package org.softwaremaestro.data.fake_login.fake
 
+import android.util.Log
 import org.softwaremaestro.data.fake_login.dto.IssueAccessTokenRequestDto
 import org.softwaremaestro.data.fake_login.dto.IssueRefreshTokenRequestDto
 import org.softwaremaestro.data.fake_login.dto.IssueLoginTokenRequestDto
 import org.softwaremaestro.data.fake_login.dto.IssueTokenResponseDto
 import org.softwaremaestro.data.fake_login.legacy.IssueAccessTokenApi
-import org.softwaremaestro.data.fake_login.legacy.IssueAccessTokenRepository
+import org.softwaremaestro.data.fake_login.legacy.AccessTokenIssuer
 import org.softwaremaestro.data.fake_login.legacy.IssueRefreshTokenApi
 import org.softwaremaestro.data.fake_login.legacy.IssueLoginTokenApi
 import org.softwaremaestro.domain.fake_login.util.attemptUntilSuccess
@@ -17,20 +18,20 @@ import org.softwaremaestro.domain.fake_login.entity.LoginAccessToken
 import org.softwaremaestro.domain.fake_login.entity.LoginRefreshToken
 import org.softwaremaestro.domain.fake_login.entity.LoginToken
 import org.softwaremaestro.domain.fake_login.result.NetworkSuccess
-import org.softwaremaestro.data.fake_login.legacy.IssueLoginTokenRepository
-import org.softwaremaestro.data.fake_login.legacy.IssueRefreshTokenRepository
+import org.softwaremaestro.data.fake_login.legacy.LoginTokenIssuer
+import org.softwaremaestro.data.fake_login.legacy.RefreshTokenIssuer
 import org.softwaremaestro.domain.fake_login.result.AccessTokenNotFound
 import org.softwaremaestro.domain.fake_login.result.RefreshTokenNotFound
 import org.softwaremaestro.domain.fake_login.result.LoginTokenNotFound
 import org.softwaremaestro.domain.fake_login.util.nullIfSuccess
 import javax.inject.Inject
 
-abstract class IssueLoginTokenRepositoryImpl(
+abstract class FakeLoginTokenIssuer(
     private val tokenNotFound: LoginTokenNotFound,
     private val issueTokenApi: IssueLoginTokenApi,
-    private val accessTokenStorageRepository: AccessTokenStorageRepositoryImpl,
-    private val refreshTokenStorageRepository: RefreshTokenStorageRepositoryImpl
-): IssueLoginTokenRepository {
+    private val accessTokenDao: FakeAccessTokenDao,
+    private val refreshTokenDao: FakeRefreshTokenDao
+): LoginTokenIssuer {
     final override suspend fun issueToken(): NetworkResult<Unit> {
         val dto = getDtoOrNull() ?: return tokenNotFound
 
@@ -60,36 +61,36 @@ abstract class IssueLoginTokenRepositoryImpl(
 
     private suspend fun saveOrFail(token: LoginToken): NetworkFailure? {
         return when (token) {
-            is LoginAccessToken -> accessTokenStorageRepository.save(token)
-            is LoginRefreshToken -> refreshTokenStorageRepository.save(token)
+            is LoginAccessToken -> accessTokenDao.save(token)
+            is LoginRefreshToken -> refreshTokenDao.save(token)
         }.nullIfSuccess()
     }
 }
 
-class IssueAccessTokenRepositoryImpl @Inject constructor(
+class FakeAccessTokenIssuer @Inject constructor(
     issueAccessTokenApi: IssueAccessTokenApi,
-    accessTokenStorageRepository: AccessTokenStorageRepositoryImpl,
-    private val refreshTokenStorageRepository: RefreshTokenStorageRepositoryImpl
-): IssueLoginTokenRepositoryImpl(
-    AccessTokenNotFound, issueAccessTokenApi, accessTokenStorageRepository, refreshTokenStorageRepository
-), IssueAccessTokenRepository {
+    accessTokenDao: FakeAccessTokenDao,
+    private val refreshTokenDao: FakeRefreshTokenDao
+): FakeLoginTokenIssuer(
+    AccessTokenNotFound, issueAccessTokenApi, accessTokenDao, refreshTokenDao
+), AccessTokenIssuer {
     override suspend fun getDtoOrNull(): IssueAccessTokenRequestDto? {
         val refreshToken = loadRefreshToken().dtoOrNull() ?: return null
         return IssueAccessTokenRequestDto(refreshToken)
     }
 
     private suspend fun loadRefreshToken(): NetworkResult<LoginRefreshToken> {
-        return refreshTokenStorageRepository.load() as NetworkResult<LoginRefreshToken>
+        return refreshTokenDao.load() as NetworkResult<LoginRefreshToken>
     }
 }
 
-class IssueRefreshTokenRepositoryImpl @Inject constructor(
+class FakeRefreshTokenIssuer @Inject constructor(
     issueRefreshTokenApi: IssueRefreshTokenApi,
-    accessTokenStorageRepository: AccessTokenStorageRepositoryImpl,
-    refreshTokenStorageRepository: RefreshTokenStorageRepositoryImpl
-): IssueLoginTokenRepositoryImpl(
-    RefreshTokenNotFound, issueRefreshTokenApi, accessTokenStorageRepository, refreshTokenStorageRepository
-), IssueRefreshTokenRepository {
+    accessTokenDao: FakeAccessTokenDao,
+    refreshTokenDao: FakeRefreshTokenDao
+): FakeLoginTokenIssuer(
+    RefreshTokenNotFound, issueRefreshTokenApi, accessTokenDao, refreshTokenDao
+), RefreshTokenIssuer {
 
     override suspend fun getDtoOrNull(): IssueRefreshTokenRequestDto? {
         return getLoginInfo().dtoOrNull()

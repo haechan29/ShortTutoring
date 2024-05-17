@@ -4,6 +4,6 @@ import org.softwaremaestro.data.fake_login.dto.RequestDto
 import org.softwaremaestro.domain.fake_login.result.NetworkResult
 import org.softwaremaestro.data.fake_login.dto.EmptyResponseDto
 
-interface TokenInjector {
-    suspend fun injectToken(request: Request<RequestDto>): NetworkResult<EmptyResponseDto>
+interface LoginTokenInjector {
+    suspend fun injectLoginToken(request: Request<RequestDto>): NetworkResult<Unit>
 }

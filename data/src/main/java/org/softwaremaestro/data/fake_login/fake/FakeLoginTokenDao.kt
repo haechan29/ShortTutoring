@@ -1,8 +1,9 @@
 package org.softwaremaestro.data.fake_login.fake
 
+import android.util.Log
 import org.softwaremaestro.data.fake_login.legacy.AccessTokenStorage
 import org.softwaremaestro.data.fake_login.legacy.RefreshTokenStorage
-import org.softwaremaestro.domain.fake_login.LoginTokenStorageRepository
+import org.softwaremaestro.domain.fake_login.LoginTokenDao
 import org.softwaremaestro.domain.fake_login.result.AccessTokenNotFound
 import org.softwaremaestro.domain.fake_login.result.InvalidAccessToken
 import org.softwaremaestro.domain.fake_login.result.InvalidRefreshToken
@@ -14,19 +15,18 @@ import org.softwaremaestro.domain.fake_login.result.RefreshTokenNotFound
 import org.softwaremaestro.domain.fake_login.result.LoginTokenNotFound
 import org.softwaremaestro.data.fake_login.legacy.LoginTokenStorage
 import org.softwaremaestro.data.fake_login.legacy.UserIdentifier
-import org.softwaremaestro.domain.fake_login.AccessTokenStorageRepository
-import org.softwaremaestro.domain.fake_login.RefreshTokenStorageRepository
-import org.softwaremaestro.domain.fake_login.entity.LoginAccessToken
+import org.softwaremaestro.domain.fake_login.AccessTokenDao
+import org.softwaremaestro.domain.fake_login.RefreshTokenDao
 import org.softwaremaestro.domain.fake_login.entity.LoginToken
 import org.softwaremaestro.domain.fake_login.entity.Validatable
 import javax.inject.Inject
 
-abstract class LoginTokenStorageRepositoryImpl(
+abstract class FakeLoginTokenDao(
     private val loginTokenStorage: LoginTokenStorage,
     private val userIdentifier: UserIdentifier,
     private val loginTokenNotFound: LoginTokenNotFound,
     private val invalidLoginToken: InvalidLoginToken,
-): LoginTokenStorageRepository {
+): LoginTokenDao {
     private val notIdentifiedUser = NotIdentifiedUser
 
     override suspend fun save(token: LoginToken): NetworkResult<Unit> {
@@ -62,16 +62,16 @@ abstract class LoginTokenStorageRepositoryImpl(
     }
 }
 
-class AccessTokenStorageRepositoryImpl @Inject constructor(
+class FakeAccessTokenDao @Inject constructor(
     accessTokenStorage: AccessTokenStorage,
     userIdentifier: UserIdentifier
-): LoginTokenStorageRepositoryImpl(
+): FakeLoginTokenDao(
     accessTokenStorage, userIdentifier, AccessTokenNotFound, InvalidAccessToken
-), AccessTokenStorageRepository
+), AccessTokenDao
 
-class RefreshTokenStorageRepositoryImpl @Inject constructor(
+class FakeRefreshTokenDao @Inject constructor(
     refreshTokenStorage: RefreshTokenStorage,
     userIdentifier: UserIdentifier
-): LoginTokenStorageRepositoryImpl(
+): FakeLoginTokenDao(
     refreshTokenStorage, userIdentifier, RefreshTokenNotFound, InvalidRefreshToken
-), RefreshTokenStorageRepository
+), RefreshTokenDao

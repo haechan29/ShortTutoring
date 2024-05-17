@@ -8,7 +8,7 @@ import io.mockk.spyk
 import org.softwaremaestro.domain.fake_login.entity.LoginToken
 import org.softwaremaestro.data.fake_login.impl.FakeLoginTokenStorage
 
-class TokenStorageTest: FunSpec({
+class LoginTokenStorageTest: FunSpec({
     isolationMode = IsolationMode.InstancePerLeaf
 
     val tokenStorage = spyk<FakeLoginTokenStorage>(recordPrivateCalls = true)

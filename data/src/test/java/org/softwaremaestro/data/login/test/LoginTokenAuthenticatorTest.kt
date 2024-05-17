@@ -8,26 +8,23 @@ import io.mockk.coVerify
 import io.mockk.mockk
 import io.mockk.spyk
 import org.softwaremaestro.data.fake_login.fake.FakeLoginTokenAuthenticator
-import org.softwaremaestro.domain.fake_login.LoginTokenStorageRepository
 import org.softwaremaestro.domain.fake_login.result.AccessTokenIsAuthenticated
 import org.softwaremaestro.domain.fake_login.result.AccessTokenIsNotAuthenticated
 import org.softwaremaestro.domain.fake_login.result.NetworkFailure
-import org.softwaremaestro.domain.fake_login.entity.LoginAccessToken
-import org.softwaremaestro.domain.fake_login.entity.LoginRefreshToken
 import org.softwaremaestro.data.fake_login.dto.LocalTokenResponseDto
-import org.softwaremaestro.domain.fake_login.AccessTokenStorageRepository
-import org.softwaremaestro.domain.fake_login.RefreshTokenStorageRepository
+import org.softwaremaestro.domain.fake_login.AccessTokenDao
+import org.softwaremaestro.domain.fake_login.RefreshTokenDao
 import org.softwaremaestro.domain.fake_login.result.NetworkSuccess
 import org.softwaremaestro.domain.fake_login.result.RefreshTokenIsNotAuthenticated
 
-class TokenAuthenticatorTest: FunSpec({
+class LoginTokenAuthenticatorTest: FunSpec({
     isolationMode = IsolationMode.InstancePerLeaf
 
-    val accessTokenRepository = mockk<AccessTokenStorageRepository>(relaxed = true)
-    val refreshTokenRepository = mockk<RefreshTokenStorageRepository>(relaxed = true)
+    val accessTokenDao = mockk<AccessTokenDao>(relaxed = true)
+    val refreshTokenDao = mockk<RefreshTokenDao>(relaxed = true)
 
     val tokenAuthenticator = spyk(
-        objToCopy = FakeLoginTokenAuthenticator(accessTokenRepository, refreshTokenRepository),
+        objToCopy = FakeLoginTokenAuthenticator(accessTokenDao, refreshTokenDao),
         recordPrivateCalls = true
     ) {
         coEvery { this@spyk["loadAccessToken"]() } returns mockk<NetworkFailure>(relaxed = true)

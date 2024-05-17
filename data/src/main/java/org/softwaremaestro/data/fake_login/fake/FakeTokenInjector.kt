@@ -1,5 +1,6 @@
 package org.softwaremaestro.data.fake_login.fake
 
+import android.util.Log
 import kotlinx.coroutines.delay
 import org.softwaremaestro.domain.fake_login.util.NetworkSyncQueue.Companion.sync
 import org.softwaremaestro.domain.fake_login.util.dtoOrNull
@@ -11,31 +12,30 @@ import org.softwaremaestro.domain.fake_login.result.AuthResult
 import org.softwaremaestro.data.fake_login.legacy.Request
 import org.softwaremaestro.domain.fake_login.result.NetworkFailure
 import org.softwaremaestro.domain.fake_login.result.RefreshTokenIsNotAuthenticated
-import org.softwaremaestro.data.fake_login.legacy.LoginTokenAuthenticator
-import org.softwaremaestro.data.fake_login.legacy.TokenInjector
+import org.softwaremaestro.data.fake_login.legacy.LoginTokenInjector
 import org.softwaremaestro.data.fake_login.dto.RequestDto
 import org.softwaremaestro.domain.fake_login.result.NetworkResult
 import org.softwaremaestro.data.fake_login.dto.EmptyResponseDto
-import org.softwaremaestro.data.fake_login.legacy.IssueAccessTokenRepository
-import org.softwaremaestro.data.fake_login.legacy.IssueRefreshTokenRepository
-import org.softwaremaestro.domain.fake_login.AccessTokenStorageRepository
+import org.softwaremaestro.domain.fake_login.AccessTokenDao
+import org.softwaremaestro.domain.fake_login.LoginTokenRepository
+import org.softwaremaestro.domain.fake_login.entity.LoginAccessToken
 import org.softwaremaestro.domain.fake_login.entity.LoginToken
+import org.softwaremaestro.domain.fake_login.entity.LoginToken.Companion.ACCESS_TOKEN
+import org.softwaremaestro.domain.fake_login.result.NetworkSuccess
 import javax.inject.Inject
 
 class FakeTokenInjector @Inject constructor(
-    private val loginTokenAuthenticator: LoginTokenAuthenticator,
-    private val accessTokenStorageRepository: AccessTokenStorageRepository,
-    private val issueAccessTokenRepository: IssueAccessTokenRepository,
-    private val issueRefreshTokenRepository: IssueRefreshTokenRepository,
-): TokenInjector {
-    private val accessTokenNotFound: AccessTokenNotFound = AccessTokenNotFound
-
-    override suspend fun injectToken(request: Request<RequestDto>): NetworkResult<EmptyResponseDto> {
+    private val accessTokenDao: AccessTokenDao,
+    private val loginTokenRepository: LoginTokenRepository
+): LoginTokenInjector {
+    override suspend fun injectLoginToken(request: Request<RequestDto>): NetworkResult<Unit> {
         checkTokenOrFail()?.let { failure -> return failure }
 
-        val token = loadAccessToken().dtoOrNull() ?: return accessTokenNotFound
+        val accessToken = loadAccessToken().dtoOrNull() ?: return AccessTokenNotFound
 
-        return addTokenToRequestHeader(token)
+        addAccessTokenToRequestHeader(request, accessToken)
+
+        return NetworkSuccess(Unit)
     }
 
     private suspend fun checkTokenOrFail(): NetworkFailure? {
@@ -45,7 +45,7 @@ class FakeTokenInjector @Inject constructor(
     }
 
     private suspend fun authenticateToken(): AuthResult {
-        return loginTokenAuthenticator.authLoginToken()
+        return loginTokenRepository.authLoginToken()
     }
 
     private suspend fun issueToken(authFailure: AuthFailure): NetworkResult<Unit> {
@@ -61,18 +61,18 @@ class FakeTokenInjector @Inject constructor(
     }
 
     private suspend fun issueAccessToken(): NetworkResult<Unit> {
-        return issueAccessTokenRepository.issueToken()
+        return loginTokenRepository.issueAccessToken()
     }
 
     private suspend fun issueRefreshToken(): NetworkResult<Unit> {
-        return issueRefreshTokenRepository.issueToken()
+        return loginTokenRepository.issueRefreshToken()
     }
 
-    private suspend fun loadAccessToken(): NetworkResult<LoginToken> {
-        return accessTokenStorageRepository.load()
+    private suspend fun loadAccessToken(): NetworkResult<LoginAccessToken> {
+        return accessTokenDao.load() as NetworkResult<LoginAccessToken>
     }
 
-    private fun addTokenToRequestHeader(loginToken: LoginToken): NetworkResult<EmptyResponseDto> {
-        TODO()
+    private fun addAccessTokenToRequestHeader(request: Request<RequestDto>, accessToken: LoginAccessToken) {
+        request.header[ACCESS_TOKEN] = accessToken
     }
 }

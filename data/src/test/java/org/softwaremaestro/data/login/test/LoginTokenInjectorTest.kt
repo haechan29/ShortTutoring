@@ -12,39 +12,27 @@ import kotlinx.coroutines.delay
 import kotlinx.coroutines.launch
 import kotlinx.coroutines.test.runTest
 import org.softwaremaestro.data.fake_login.fake.FakeTokenInjector
-import org.softwaremaestro.domain.fake_login.LoginTokenStorageRepository
 import org.softwaremaestro.domain.fake_login.result.AccessTokenIsNotAuthenticated
 import org.softwaremaestro.domain.fake_login.result.AuthFailure
 import org.softwaremaestro.domain.fake_login.result.AuthSuccess
 import org.softwaremaestro.domain.fake_login.entity.LoginAccessToken
-import org.softwaremaestro.domain.fake_login.entity.LoginRefreshToken
 import org.softwaremaestro.data.fake_login.legacy.Request
 import org.softwaremaestro.domain.fake_login.result.NetworkFailure
 import org.softwaremaestro.domain.fake_login.result.RefreshTokenIsNotAuthenticated
-import org.softwaremaestro.data.fake_login.legacy.LoginTokenAuthenticator
-import org.softwaremaestro.data.fake_login.legacy.IssueLoginTokenRepository
 import org.softwaremaestro.data.fake_login.dto.RequestDto
 import org.softwaremaestro.domain.fake_login.result.NetworkResult
 import org.softwaremaestro.data.fake_login.dto.EmptyResponseDto
-import org.softwaremaestro.data.fake_login.legacy.IssueAccessTokenRepository
-import org.softwaremaestro.data.fake_login.legacy.IssueRefreshTokenRepository
-import org.softwaremaestro.domain.fake_login.AccessTokenStorageRepository
+import org.softwaremaestro.data.fake_login.legacy.LoginTokenRepositoryImpl
+import org.softwaremaestro.domain.fake_login.AccessTokenDao
 
-class TokenInjectorTest: FunSpec({
+class LoginTokenInjectorTest: FunSpec({
     isolationMode = IsolationMode.InstancePerLeaf
 
-    val tokenAuthenticator = mockk<LoginTokenAuthenticator>(relaxed = true)
-    val accessTokenStorageRepository = mockk<AccessTokenStorageRepository>(relaxed = true)
-    val issueAccessTokenRepository = mockk<IssueAccessTokenRepository>(relaxed = true)
-    val issueRefreshTokenRepository = mockk<IssueRefreshTokenRepository>(relaxed = true)
+    val accessTokenDao = mockk<AccessTokenDao>(relaxed = true)
+    val loginTokenRepository = mockk<LoginTokenRepositoryImpl>(relaxed = true)
 
     val tokenInjector = spyk(
-        objToCopy = FakeTokenInjector(
-            tokenAuthenticator,
-            accessTokenStorageRepository,
-            issueAccessTokenRepository,
-            issueRefreshTokenRepository
-        ),
+        objToCopy = FakeTokenInjector(accessTokenDao, loginTokenRepository),
         recordPrivateCalls = true
     ) {
         coEvery { this@spyk["authenticateToken"]() } returns mockk<AuthSuccess>(relaxed = true)
@@ -56,7 +44,7 @@ class TokenInjectorTest: FunSpec({
     context("액세스 토큰이 유효하지 않으면") {
         coEvery { tokenInjector["authenticateToken"]() } returns AccessTokenIsNotAuthenticated
 
-        tokenInjector.injectToken(mockk<Request<RequestDto>>(relaxed = true))
+        tokenInjector.injectLoginToken(mockk<Request<RequestDto>>(relaxed = true))
 
         test("액세스 토큰을 발급받는다") {
             coVerify { tokenInjector["issueAccessToken"]() }
@@ -66,7 +54,7 @@ class TokenInjectorTest: FunSpec({
     context("리프레시 토큰이 유효하지 않으면") {
         coEvery { tokenInjector["authenticateToken"]() } returns RefreshTokenIsNotAuthenticated
 
-        tokenInjector.injectToken(mockk<Request<RequestDto>>(relaxed = true))
+        tokenInjector.injectLoginToken(mockk<Request<RequestDto>>(relaxed = true))
 
         test("리프레시 토큰을 발급받는다") {
             coVerify { tokenInjector["issueRefreshToken"]() }
@@ -76,7 +64,7 @@ class TokenInjectorTest: FunSpec({
     context("토큰 발급이 실패하면") {
         coEvery { tokenInjector["checkTokenOrFail"]() } returns mockk<NetworkFailure>(relaxed = true)
 
-        val result = tokenInjector.injectToken(mockk<Request<RequestDto>>(relaxed = true))
+        val result = tokenInjector.injectLoginToken(mockk<Request<RequestDto>>(relaxed = true))
 
         test("토큰 추가를 실패 처리한다") {
             result should beInstanceOf<NetworkFailure>()
@@ -93,7 +81,7 @@ class TokenInjectorTest: FunSpec({
         runTest {
             repeat(10) {
                 launch {
-                    tokenInjector.injectToken(mockk<Request<RequestDto>>(relaxed = true))
+                    tokenInjector.injectLoginToken(mockk<Request<RequestDto>>(relaxed = true))
                 }
             }
         }

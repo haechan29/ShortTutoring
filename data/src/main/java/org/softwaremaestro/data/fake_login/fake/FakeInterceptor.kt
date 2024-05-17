@@ -8,7 +8,7 @@ import org.softwaremaestro.data.fake_login.legacy.Request
 import org.softwaremaestro.data.fake_login.legacy.Response
 import org.softwaremaestro.data.fake_login.legacy.Server
 import org.softwaremaestro.data.fake_login.dto.EmptyResponseDto
-import org.softwaremaestro.data.fake_login.legacy.TokenInjector
+import org.softwaremaestro.data.fake_login.legacy.LoginTokenInjector
 import org.softwaremaestro.data.fake_login.dto.RequestDto
 import org.softwaremaestro.data.fake_login.dto.ResponseDto
 import org.softwaremaestro.data.fake_login.legacy.AutoLoginInterceptor
@@ -19,7 +19,7 @@ import org.softwaremaestro.domain.fake_login.result.DtoContainsNullFieldFailure
 import org.softwaremaestro.domain.fake_login.result.NetworkSuccess
 
 abstract class FakeInterceptor<in ReqDto: RequestDto, out ResDto: ResponseDto>(
-    private val tokenInjector: TokenInjector,
+    private val loginTokenInjector: LoginTokenInjector,
     private val server: Server<ReqDto, ResDto>
 ): Interceptor<ReqDto, ResDto> {
     private val accessTokenNotFound = AccessTokenNotFound
@@ -34,8 +34,8 @@ abstract class FakeInterceptor<in ReqDto: RequestDto, out ResDto: ResponseDto>(
         return body
     }
 
-    private suspend fun injectToken(dto: Request<ReqDto>): NetworkResult<EmptyResponseDto> {
-        return tokenInjector.injectToken(dto)
+    private suspend fun injectToken(dto: Request<ReqDto>): NetworkResult<Unit> {
+        return loginTokenInjector.injectLoginToken(dto)
     }
 
     private suspend fun sendToServer(request: Request<ReqDto>): Response<ResDto> {
@@ -44,5 +44,5 @@ abstract class FakeInterceptor<in ReqDto: RequestDto, out ResDto: ResponseDto>(
 }
 
 class FakeAutoLoginInterceptor(
-    tokenInjector: TokenInjector, server: AutoLoginServer
-): FakeInterceptor<EmptyRequestDto, AutoLoginResponseDto>(tokenInjector, server), AutoLoginInterceptor
+    loginTokenInjector: LoginTokenInjector, server: AutoLoginServer
+): FakeInterceptor<EmptyRequestDto, AutoLoginResponseDto>(loginTokenInjector, server), AutoLoginInterceptor

@@ -1,5 +1,6 @@
 package org.softwaremaestro.data.fake_login.impl
 
+import android.util.Log
 import org.softwaremaestro.domain.fake_login.AutoLoginRepository
 import org.softwaremaestro.data.fake_login.dto.EmptyRequestDto
 import org.softwaremaestro.data.fake_login.legacy.AutoLoginApi

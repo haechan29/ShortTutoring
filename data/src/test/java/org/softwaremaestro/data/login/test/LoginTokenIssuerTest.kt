@@ -11,11 +11,11 @@ import io.mockk.mockk
 import io.mockk.spyk
 import org.softwaremaestro.data.fake_login.dto.IssueLoginTokenRequestDto
 import org.softwaremaestro.data.fake_login.dto.IssueTokenResponseDto
-import org.softwaremaestro.data.fake_login.fake.IssueAccessTokenRepositoryImpl
-import org.softwaremaestro.data.fake_login.fake.AccessTokenStorageRepositoryImpl
-import org.softwaremaestro.data.fake_login.fake.IssueRefreshTokenRepositoryImpl
-import org.softwaremaestro.data.fake_login.fake.RefreshTokenStorageRepositoryImpl
-import org.softwaremaestro.data.fake_login.fake.IssueLoginTokenRepositoryImpl
+import org.softwaremaestro.data.fake_login.fake.AccessTokenIssuer
+import org.softwaremaestro.data.fake_login.fake.FakeAccessTokenDao
+import org.softwaremaestro.data.fake_login.fake.RefreshTokenIssuer
+import org.softwaremaestro.data.fake_login.fake.FakeRefreshTokenDao
+import org.softwaremaestro.data.fake_login.fake.FakeLoginTokenIssuer
 import org.softwaremaestro.data.fake_login.legacy.IssueAccessTokenApi
 import org.softwaremaestro.data.fake_login.legacy.IssueRefreshTokenApi
 import org.softwaremaestro.data.fake_login.legacy.IssueLoginTokenApi
@@ -25,7 +25,7 @@ import org.softwaremaestro.domain.fake_login.entity.LoginToken
 import org.softwaremaestro.domain.fake_login.result.NetworkSuccess
 import org.softwaremaestro.domain.fake_login.result.LoginTokenNotFound
 
-class IssueTokenRepositoryTest: FunSpec({
+class LoginTokenIssuerTest: FunSpec({
     isolationMode = IsolationMode.InstancePerLeaf
 
     val issueAccessTokenApi = mockk<IssueAccessTokenApi>(relaxed = true)
@@ -34,25 +34,25 @@ class IssueTokenRepositoryTest: FunSpec({
 
     val tokenNotFound = mockk<LoginTokenNotFound>(relaxed = true)
 
-    val accessTokenStorageRepository = mockk<AccessTokenStorageRepositoryImpl>(relaxed = true)
-    val refreshTokenStorageRepository = mockk<RefreshTokenStorageRepositoryImpl>(relaxed = true)
+    val accessTokenDao = mockk<FakeAccessTokenDao>(relaxed = true)
+    val refreshTokenDao = mockk<FakeRefreshTokenDao>(relaxed = true)
 
     val accessTokenIssuer = spyk(
-        IssueAccessTokenRepositoryImpl(issueAccessTokenApi, accessTokenStorageRepository, refreshTokenStorageRepository),
+        AccessTokenIssuer(issueAccessTokenApi, accessTokenDao, refreshTokenDao),
         recordPrivateCalls = true) {
 
         coEvery { this@spyk["sendRequest"](ofType<IssueLoginTokenRequestDto>()) } returns NetworkSuccess(mockk<IssueTokenResponseDto>(relaxed = true))
     }
 
     val refreshTokenIssuer = spyk(
-        IssueRefreshTokenRepositoryImpl(issueRefreshTokenApi, accessTokenStorageRepository, refreshTokenStorageRepository),
+        RefreshTokenIssuer(issueRefreshTokenApi, accessTokenDao, refreshTokenDao),
         recordPrivateCalls = true
     ) {
         coEvery { this@spyk["sendRequest"](ofType<IssueLoginTokenRequestDto>()) } returns NetworkSuccess(mockk<IssueTokenResponseDto>(relaxed = true))
     }
 
-    val tokenIssuer = spyk(object: IssueLoginTokenRepositoryImpl(
-        tokenNotFound, issueTokenApi, accessTokenStorageRepository, refreshTokenStorageRepository
+    val loginTokenIssuer = spyk(object: FakeLoginTokenIssuer(
+        tokenNotFound, issueTokenApi, accessTokenDao, refreshTokenDao
     ) {
         override suspend fun getDtoOrNull(): IssueLoginTokenRequestDto {
             return mockk<IssueLoginTokenRequestDto>(relaxed = true)
@@ -78,9 +78,9 @@ class IssueTokenRepositoryTest: FunSpec({
     }
 
     context("리프레시 토큰을 로드하거나 로그인 정보를 입력받는데 실패하면") {
-        coEvery { tokenIssuer["sendRequest"](ofType<IssueLoginTokenRequestDto>()) } returns mockk<NetworkFailure>(relaxed = true)
+        coEvery { loginTokenIssuer["sendRequest"](ofType<IssueLoginTokenRequestDto>()) } returns mockk<NetworkFailure>(relaxed = true)
 
-        val result = tokenIssuer.issueToken()
+        val result = loginTokenIssuer.issueToken()
 
         test("토큰 발급을 실패 처리한다") {
             result should beInstanceOf<NetworkFailure>()
@@ -88,9 +88,9 @@ class IssueTokenRepositoryTest: FunSpec({
     }
 
     context("리프레시 토큰을 발급할 때 로그인 정보가 올바르지 않다면") {
-        coEvery { tokenIssuer["sendRequest"](ofType<IssueLoginTokenRequestDto>()) } returns InvalidLoginInfo
+        coEvery { loginTokenIssuer["sendRequest"](ofType<IssueLoginTokenRequestDto>()) } returns InvalidLoginInfo
 
-        val result = tokenIssuer.issueToken()
+        val result = loginTokenIssuer.issueToken()
 
         test("토큰 발급을 로그인 정보가 유효하지 않음 실패 처리한다") {
             result shouldBe InvalidLoginInfo
@@ -98,9 +98,9 @@ class IssueTokenRepositoryTest: FunSpec({
     }
 
     context("토큰을 저장하는데 실패하면") {
-        coEvery { tokenIssuer["saveOrFail"](ofType<LoginToken>()) } returns mockk<NetworkFailure>(relaxed = true)
+        coEvery { loginTokenIssuer["saveOrFail"](ofType<LoginToken>()) } returns mockk<NetworkFailure>(relaxed = true)
 
-        val result = tokenIssuer.issueToken()
+        val result = loginTokenIssuer.issueToken()
 
         test("토큰 발급을 실패 처리한다") {
             result should beInstanceOf<NetworkFailure>()
@@ -108,12 +108,12 @@ class IssueTokenRepositoryTest: FunSpec({
     }
 
     context("API가 로그인 정보가 유효하지 않음 실패가 아닌 다른 실패 응답을 반환하면") {
-        coEvery { tokenIssuer["sendRequest"](ofType<IssueLoginTokenRequestDto>()) } returns mockk<NetworkFailure>()
+        coEvery { loginTokenIssuer["sendRequest"](ofType<IssueLoginTokenRequestDto>()) } returns mockk<NetworkFailure>()
 
-        tokenIssuer.issueToken()
+        loginTokenIssuer.issueToken()
 
         test("토큰 발급을 재요청한다") {
-            coVerify(atLeast = 2) { tokenIssuer["sendRequest"](ofType<IssueLoginTokenRequestDto>()) }
+            coVerify(atLeast = 2) { loginTokenIssuer["sendRequest"](ofType<IssueLoginTokenRequestDto>()) }
         }
     }
 })

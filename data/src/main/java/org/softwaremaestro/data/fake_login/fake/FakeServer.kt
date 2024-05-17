@@ -36,17 +36,17 @@ abstract class FakeServer<in ReqDto : RequestDto, out ResDto : ResponseDto>: Ser
     }
 }
 
-class FakeRequest<out Dto: RequestDto>(override val dto: Dto): Request<Dto>
+data class FakeRequest<out Dto: RequestDto>(
+    override val header: MutableMap<String, LoginToken> = mutableMapOf(),
+    override val dto: Dto
+): Request<Dto>
+
 class FakeResponse<out Dto: ResponseDto>(override val body: NetworkResult<Dto>): Response<Dto>
 
 abstract class FakeIssueLoginTokenServer
 : FakeServer<IssueLoginTokenRequestDto, IssueTokenResponseDto>(), IssueLoginTokenServer {
     override fun toResDto(reqDto: IssueLoginTokenRequestDto): IssueTokenResponseDto {
         return IssueTokenResponseDto(FakeLoginAccessToken, FakeLoginRefreshToken)
-    }
-
-    override suspend fun send(request: Request<IssueLoginTokenRequestDto>): Response<IssueTokenResponseDto> {
-        return super.send(request)
     }
 }
 
@@ -56,9 +56,5 @@ class FakeIssueRefreshTokenServer @Inject constructor(): FakeIssueLoginTokenServ
 class FakeAutoLoginServer @Inject constructor(): FakeServer<EmptyRequestDto, AutoLoginResponseDto>(), AutoLoginServer {
     override fun toResDto(reqDto: EmptyRequestDto): AutoLoginResponseDto {
         return AutoLoginResponseDto(Role.STUDENT)
-    }
-
-    override suspend fun send(request: Request<EmptyRequestDto>): Response<AutoLoginResponseDto> {
-        return super.send(request)
     }
 }

@@ -1,5 +1,6 @@
 package org.softwaremaestro.data.fake_login.impl
 
+import android.util.Log
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.delay
 import kotlinx.coroutines.withContext
@@ -15,13 +16,13 @@ open class FakeLoginTokenStorage: LoginTokenStorage {
     override suspend fun save(loginToken: LoginToken) {
         withContext(Dispatchers.IO) {
             savedToken = loginToken
-            delay(1000)
+            delay(50)
         }
     }
 
     override suspend fun load(): LoginToken? {
         return withContext(Dispatchers.IO) {
-            delay(1000)
+            delay(50)
             savedToken
         }
     }

@@ -5,44 +5,42 @@ import dagger.Provides
 import dagger.hilt.InstallIn
 import dagger.hilt.components.SingletonComponent
 import org.softwaremaestro.data.common.module.NetworkModule
-import org.softwaremaestro.data.fake_login.fake.AccessTokenStorageRepositoryImpl
+import org.softwaremaestro.data.fake_login.fake.FakeAccessTokenDao
+import org.softwaremaestro.data.fake_login.fake.FakeAccessTokenIssuer
 import org.softwaremaestro.data.fake_login.fake.FakeAutoLoginApi
 import org.softwaremaestro.data.fake_login.fake.FakeAutoLoginInterceptor
 import org.softwaremaestro.data.fake_login.fake.FakeAutoLoginServer
 import org.softwaremaestro.data.fake_login.fake.FakeIssueAccessTokenApi
-import org.softwaremaestro.data.fake_login.fake.IssueAccessTokenRepositoryImpl
 import org.softwaremaestro.data.fake_login.fake.FakeIssueAccessTokenServer
 import org.softwaremaestro.data.fake_login.fake.FakeIssueRefreshTokenApi
-import org.softwaremaestro.data.fake_login.fake.IssueRefreshTokenRepositoryImpl
 import org.softwaremaestro.data.fake_login.fake.FakeIssueRefreshTokenServer
-import org.softwaremaestro.data.fake_login.fake.RefreshTokenStorageRepositoryImpl
+import org.softwaremaestro.data.fake_login.fake.FakeRefreshTokenDao
 import org.softwaremaestro.data.fake_login.fake.FakeLoginTokenAuthenticator
+import org.softwaremaestro.data.fake_login.fake.FakeRefreshTokenIssuer
 import org.softwaremaestro.data.fake_login.fake.FakeTokenInjector
 import org.softwaremaestro.data.fake_login.fake.FakeUserIdentifier
 import org.softwaremaestro.data.fake_login.impl.AutoLoginRepositoryImpl
 import org.softwaremaestro.data.fake_login.impl.FakeAccessTokenStorage
 import org.softwaremaestro.data.fake_login.impl.FakeRefreshTokenStorage
+import org.softwaremaestro.data.fake_login.legacy.AccessTokenIssuer
 import org.softwaremaestro.data.fake_login.legacy.AccessTokenStorage
 import org.softwaremaestro.data.fake_login.legacy.AutoLoginApi
 import org.softwaremaestro.data.fake_login.legacy.AutoLoginInterceptor
 import org.softwaremaestro.data.fake_login.legacy.AutoLoginServer
 import org.softwaremaestro.data.fake_login.legacy.IssueAccessTokenApi
-import org.softwaremaestro.data.fake_login.legacy.IssueAccessTokenRepository
 import org.softwaremaestro.data.fake_login.legacy.IssueAccessTokenServer
 import org.softwaremaestro.data.fake_login.legacy.IssueRefreshTokenApi
 import org.softwaremaestro.data.fake_login.legacy.IssueRefreshTokenServer
-import org.softwaremaestro.data.fake_login.legacy.IssueLoginTokenRepository
-import org.softwaremaestro.data.fake_login.legacy.IssueRefreshTokenRepository
 import org.softwaremaestro.data.fake_login.legacy.RefreshTokenStorage
 import org.softwaremaestro.data.fake_login.legacy.LoginTokenAuthenticator
-import org.softwaremaestro.data.fake_login.legacy.TokenInjector
+import org.softwaremaestro.data.fake_login.legacy.LoginTokenInjector
+import org.softwaremaestro.data.fake_login.legacy.LoginTokenRepositoryImpl
+import org.softwaremaestro.data.fake_login.legacy.RefreshTokenIssuer
 import org.softwaremaestro.data.fake_login.legacy.UserIdentifier
-import org.softwaremaestro.domain.fake_login.AccessTokenStorageRepository
+import org.softwaremaestro.domain.fake_login.AccessTokenDao
 import org.softwaremaestro.domain.fake_login.AutoLoginRepository
-import org.softwaremaestro.domain.fake_login.LoginTokenStorageRepository
-import org.softwaremaestro.domain.fake_login.RefreshTokenStorageRepository
-import org.softwaremaestro.domain.fake_login.entity.LoginAccessToken
-import org.softwaremaestro.domain.fake_login.entity.LoginRefreshToken
+import org.softwaremaestro.domain.fake_login.LoginTokenRepository
+import org.softwaremaestro.domain.fake_login.RefreshTokenDao
 import org.softwaremaestro.domain.fake_login.usecase.FakeAutoLoginUseCase
 import javax.inject.Singleton
 
@@ -71,9 +69,9 @@ object LoginModule {
     @Provides
     @Singleton
     fun provideAutoLoginInterceptor(
-        tokenInjector: TokenInjector, server: AutoLoginServer
+        loginTokenInjector: LoginTokenInjector, server: AutoLoginServer
     ): AutoLoginInterceptor {
-        return FakeAutoLoginInterceptor(tokenInjector, server)
+        return FakeAutoLoginInterceptor(loginTokenInjector, server)
     }
 
     @Provides
@@ -108,40 +106,48 @@ object LoginModule {
 
     @Provides
     @Singleton
-    fun provideTokenInjector(
-        authenticator: LoginTokenAuthenticator,
-        accessTokenStorageRepository: AccessTokenStorageRepository,
-        issueAccessTokenRepository: IssueAccessTokenRepository,
-        issueRefreshTokenRepository: IssueRefreshTokenRepository,
-    ): TokenInjector {
-        return FakeTokenInjector(authenticator, accessTokenStorageRepository, issueAccessTokenRepository, issueRefreshTokenRepository)
+    fun provideLoginTokenInjector(
+        accessTokenDao: AccessTokenDao,
+        loginTokenRepository: LoginTokenRepository
+    ): LoginTokenInjector {
+        return FakeTokenInjector(accessTokenDao, loginTokenRepository)
+    }
+
+    @Provides
+    @Singleton
+    fun provideLoginTokenRepository(
+        loginTokenAuthenticator: LoginTokenAuthenticator,
+        accessTokenIssuer: AccessTokenIssuer,
+        refreshTokenIssuer: RefreshTokenIssuer
+    ): LoginTokenRepository {
+        return LoginTokenRepositoryImpl(loginTokenAuthenticator, accessTokenIssuer, refreshTokenIssuer)
     }
 
     @Provides
     @Singleton
     fun provideTokenAuthenticator(
-        accessTokenStorageRepository: AccessTokenStorageRepository,
-        refreshTokenStorageRepository: RefreshTokenStorageRepository
+        accessTokenDao: AccessTokenDao,
+        refreshTokenDao: RefreshTokenDao
     ): LoginTokenAuthenticator {
-        return FakeLoginTokenAuthenticator(accessTokenStorageRepository, refreshTokenStorageRepository)
+        return FakeLoginTokenAuthenticator(accessTokenDao, refreshTokenDao)
     }
 
     @Provides
     @Singleton
-    fun provideAccessTokenStorageRepository(
+    fun provideAccessTokenDao(
         accessTokenStorage: AccessTokenStorage,
         userIdentifier: UserIdentifier,
-    ): AccessTokenStorageRepository {
-        return AccessTokenStorageRepositoryImpl(accessTokenStorage, userIdentifier)
+    ): AccessTokenDao {
+        return FakeAccessTokenDao(accessTokenStorage, userIdentifier)
     }
 
     @Provides
     @Singleton
-    fun provideRefreshTokenStorageRepository(
+    fun provideRefreshTokenDao(
         refreshTokenStorage: RefreshTokenStorage,
         userIdentifier: UserIdentifier,
-    ): RefreshTokenStorageRepository {
-        return RefreshTokenStorageRepositoryImpl(refreshTokenStorage, userIdentifier)
+    ): RefreshTokenDao {
+        return FakeRefreshTokenDao(refreshTokenStorage, userIdentifier)
     }
 
     @Provides
@@ -164,21 +170,21 @@ object LoginModule {
 
     @Provides
     @Singleton
-    fun provideIssueAccessTokenRepository(
+    fun provideAccessTokenIssuer(
         issueAccessTokenApi: IssueAccessTokenApi,
-        accessTokenStorageRepository: AccessTokenStorageRepositoryImpl,
-        refreshTokenStorageRepository: RefreshTokenStorageRepositoryImpl
-    ): IssueAccessTokenRepository {
-        return IssueAccessTokenRepositoryImpl(issueAccessTokenApi, accessTokenStorageRepository, refreshTokenStorageRepository)
+        accessTokenDao: FakeAccessTokenDao,
+        refreshTokenDao: FakeRefreshTokenDao
+    ): AccessTokenIssuer {
+        return FakeAccessTokenIssuer(issueAccessTokenApi, accessTokenDao, refreshTokenDao)
     }
 
     @Provides
     @Singleton
-    fun provideIssueRefreshTokenRepository(
+    fun provideRefreshTokenIssuer(
         issueRefreshTokenApi: IssueRefreshTokenApi,
-        accessTokenStorageRepository: AccessTokenStorageRepositoryImpl,
-        refreshTokenStorageRepository: RefreshTokenStorageRepositoryImpl
-    ): IssueRefreshTokenRepository {
-        return IssueRefreshTokenRepositoryImpl(issueRefreshTokenApi, accessTokenStorageRepository, refreshTokenStorageRepository)
+        accessTokenDao: FakeAccessTokenDao,
+        refreshTokenDao: FakeRefreshTokenDao
+    ): RefreshTokenIssuer {
+        return FakeRefreshTokenIssuer(issueRefreshTokenApi, accessTokenDao, refreshTokenDao)
     }
 }

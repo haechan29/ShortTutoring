@@ -22,6 +22,7 @@ interface IssueRefreshTokenServer: IssueLoginTokenServer
 interface AutoLoginServer: Server<EmptyRequestDto, AutoLoginResponseDto>
 
 interface Request<out Dto: RequestDto> {
+    val header: MutableMap<String, LoginToken>
     val dto: Dto
 }
 

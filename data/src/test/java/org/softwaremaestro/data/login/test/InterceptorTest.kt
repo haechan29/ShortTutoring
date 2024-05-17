@@ -15,7 +15,7 @@ import org.softwaremaestro.data.fake_login.legacy.Response
 import org.softwaremaestro.data.fake_login.legacy.Server
 import org.softwaremaestro.data.fake_login.dto.RequestDto
 import org.softwaremaestro.data.fake_login.dto.ResponseDto
-import org.softwaremaestro.data.fake_login.legacy.TokenInjector
+import org.softwaremaestro.data.fake_login.legacy.LoginTokenInjector
 import org.softwaremaestro.domain.fake_login.result.AccessTokenNotFound
 import org.softwaremaestro.domain.fake_login.result.DtoContainsNullFieldFailure
 import org.softwaremaestro.domain.fake_login.result.NetworkFailure
@@ -24,7 +24,7 @@ import org.softwaremaestro.domain.fake_login.result.NetworkSuccess
 class InterceptorTest: FunSpec({
     isolationMode = IsolationMode.InstancePerLeaf
 
-    val tokenInjector = mockk<TokenInjector>(relaxed = true)
+    val tokenInjector = mockk<LoginTokenInjector>(relaxed = true)
     val server = mockk<Server<RequestDto, ResponseDto>>(relaxed = true)
 
     val interceptor = spyk(
