@@ -3,8 +3,10 @@ package org.softwaremaestro.data.fake_login
 import dagger.Module
 import dagger.Provides
 import dagger.hilt.InstallIn
+import dagger.hilt.android.qualifiers.ApplicationContext
 import dagger.hilt.components.SingletonComponent
 import org.softwaremaestro.data.common.module.NetworkModule
+import org.softwaremaestro.data.fake_login.encrypted_shared_preference.LocalLoginTokenStorage
 import org.softwaremaestro.data.fake_login.fake.FakeAccessTokenDao
 import org.softwaremaestro.data.fake_login.fake.FakeAccessTokenIssuer
 import org.softwaremaestro.data.fake_login.fake.FakeAutoLoginApi

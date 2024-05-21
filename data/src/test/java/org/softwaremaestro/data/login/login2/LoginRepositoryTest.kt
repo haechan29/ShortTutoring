@@ -3,7 +3,7 @@ package org.softwaremaestro.data.login.login2
 import io.kotest.core.spec.IsolationMode
 import io.kotest.core.spec.style.FunSpec
 
-class LoginRepositoryTest2: FunSpec({
+class LoginRepositoryTest: FunSpec({
     isolationMode = IsolationMode.InstancePerLeaf
 
 

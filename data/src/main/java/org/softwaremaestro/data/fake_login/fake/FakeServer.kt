@@ -13,10 +13,6 @@ import org.softwaremaestro.data.fake_login.legacy.IssueLoginTokenServer
 import org.softwaremaestro.data.fake_login.legacy.Request
 import org.softwaremaestro.data.fake_login.legacy.Response
 import org.softwaremaestro.data.fake_login.legacy.Server
-import org.softwaremaestro.domain.fake_login.entity.FakeLoginAccessToken
-import org.softwaremaestro.domain.fake_login.entity.FakeLoginRefreshToken
-import org.softwaremaestro.domain.fake_login.entity.LoginAccessToken
-import org.softwaremaestro.domain.fake_login.entity.LoginRefreshToken
 import org.softwaremaestro.domain.fake_login.entity.LoginToken
 import org.softwaremaestro.domain.fake_login.entity.Role
 import org.softwaremaestro.domain.fake_login.result.NetworkResult
@@ -46,7 +42,7 @@ class FakeResponse<out Dto: ResponseDto>(override val body: NetworkResult<Dto>):
 abstract class FakeIssueLoginTokenServer
 : FakeServer<IssueLoginTokenRequestDto, IssueTokenResponseDto>(), IssueLoginTokenServer {
     override fun toResDto(reqDto: IssueLoginTokenRequestDto): IssueTokenResponseDto {
-        return IssueTokenResponseDto(FakeLoginAccessToken, FakeLoginRefreshToken)
+        return IssueTokenResponseDto(FakeLoginAccessToken(), FakeLoginRefreshToken())
     }
 }
 
